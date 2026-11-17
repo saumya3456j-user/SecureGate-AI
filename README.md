@@ -87,11 +87,10 @@ SecureGateAI/
 │   ├── services/                 # Nodemailer email service, command queue
 │   ├── utils/                    # Crypto hash utilities, system logger
 │   └── test/
-│       └── api.test.js           # 14 automated integration & security tests
+│       └── api.test.js           # 21 automated integration & security tests (100% passing)
 │
 ├── esp32/                        # ESP32 Embedded Edge Firmware
-│   ├── SecureGateAI.ino          # Complete Arduino C++ firmware (IST UTC+5:30)
-│   ├── webpage.h                 # Embedded PROGMEM web server (SoftAP fallback)
+│   ├── SecureGateAI_Direct.ino   # Optimized production Arduino C++ firmware
 │   └── README.md                 # Firmware configuration & flashing guide
 │
 ├── docs/                         # Comprehensive Engineering Documentation
@@ -99,8 +98,12 @@ SecureGateAI/
 │   ├── hardware-connections.md   # Pinout table, schematics & electrical safety
 │   ├── api-documentation.md      # Full REST API documentation
 │   ├── setup-guide.md            # Installation & deployment instructions
-│   └── demo-guide.md             # College project viva presentation script
+│   └── demo-guide.md             # Project viva presentation script
 │
+├── presentation.html             # 📊 Interactive 14-slide browser presentation deck
+├── SecureGate_AI_Project_Presentation.pptx # 📊 PowerPoint master presentation deck
+├── SecureGate-AI_Complete_Project.zip      # 📦 Clean portable project archive
+├── TEAM_QUICKSTART_GUIDE.md      # ⚡ 3-minute team setup & run guide
 ├── .gitignore
 └── README.md
 ```
@@ -141,7 +144,7 @@ The server will boot up on `http://localhost:5000` and automatically connect to 
 ```bash
 npm test
 ```
-Executes all 14 end-to-end integration tests covering authentication, visitor approval, hashed OTP verification, device command invalidation, and log sync.
+Executes all 21 end-to-end integration tests covering authentication, visitor approval, hashed OTP verification, device command invalidation, anti-replay, and audit trails.
 
 ### 3. Open the Web Application
 - **Main Portal:** [http://localhost:5000](http://localhost:5000)
@@ -149,6 +152,7 @@ Executes all 14 end-to-end integration tests covering authentication, visitor ap
 - **Visitor Request Form:** [http://localhost:5000/visitor.html](http://localhost:5000/visitor.html)
 - **OTP Verification Screen:** [http://localhost:5000/verify-otp.html](http://localhost:5000/verify-otp.html)
 - **Host / Admin Dashboard:** [http://localhost:5000/admin.html](http://localhost:5000/admin.html)
+- **Presentation Deck:** [http://localhost:5000/presentation.html](http://localhost:5000/presentation.html)
   *(Default Login: `admin@securegate.local` / `adminpassword123`)*
 
 ### 4. Flash the ESP32 Microcontroller
