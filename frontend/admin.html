@@ -1,0 +1,626 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Host & Admin Console — SecureGate AI</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/admin.css">
+</head>
+<body>
+
+  <!-- Navigation Bar -->
+  <nav class="navbar">
+    <a href="index.html" class="brand">
+      <div class="brand-icon">🛡️</div>
+      <div class="brand-text">
+        <div class="brand-title">
+          SECUREGATE AI
+          <span class="brand-badge">ADMIN</span>
+        </div>
+        <div class="brand-tagline">Intelligent Access. Reliable Security.</div>
+      </div>
+    </a>
+
+    <ul class="nav-links">
+      <li class="nav-item"><a href="index.html">Entry Portal</a></li>
+      <li class="nav-item"><a href="user.html">RFID User</a></li>
+      <li class="nav-item"><a href="visitor.html">Visitor Request</a></li>
+      <li class="nav-item"><a href="verify-otp.html">Verify OTP</a></li>
+      <li class="nav-item"><a href="admin.html" class="active">Host Dashboard</a></li>
+    </ul>
+
+    <div class="nav-status">
+      <div id="admin-user-display" style="font-size: 0.82rem; font-weight: 600; color: var(--accent-cyan);"></div>
+      <button id="admin-logout-btn" class="btn btn-outline btn-sm">Sign Out</button>
+    </div>
+  </nav>
+
+  <!-- Section A: Authentication Screen (Displayed when not signed in) -->
+  <div id="admin-login-screen" class="container" style="display: flex; align-items: center; justify-content: center; min-height: 70vh;">
+    <div class="card card-elevated" style="width: 100%; max-width: 440px; padding: 2.25rem;">
+      <div style="text-align: center; margin-bottom: 1.75rem;">
+        <div style="font-size: 2.6rem; margin-bottom: 0.5rem;">🔐</div>
+        <h2 style="font-size: 1.6rem;">Host & Admin Login</h2>
+        <p style="color: var(--text-secondary); font-size: 0.88rem;">
+          Authenticate to manage RFID users, visitor permissions, and gate controls.
+        </p>
+      </div>
+
+      <form id="admin-login-form">
+        <div class="form-group">
+          <label class="form-label" for="login-email">Administrator Email</label>
+          <input type="email" id="login-email" class="form-control" value="admin@securegate.local" required>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="login-password">Password</label>
+          <input type="password" id="login-password" class="form-control" value="adminpassword123" required>
+        </div>
+
+        <button type="submit" id="login-submit-btn" class="btn btn-primary btn-lg" style="width: 100%; margin-top: 0.5rem;">
+          Sign In to Dashboard ➔
+        </button>
+
+        <div style="margin-top: 1.25rem; font-size: 0.78rem; color: var(--text-muted); text-align: center; background: rgba(0,0,0,0.2); padding: 8px; border-radius: 6px;">
+          Default Admin: <code>admin@securegate.local</code> / <code>adminpassword123</code>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Section B: Authenticated Management Dashboard -->
+  <main id="admin-dashboard-screen" class="container" style="display: none;">
+    
+    <!-- Top Header -->
+    <div class="dashboard-header">
+      <div>
+        <h1 style="font-size: 2rem;">Security Command Center</h1>
+        <p style="color: var(--text-secondary); font-size: 0.95rem;">
+          Live MongoDB User Management, RFID Identification, and IoT Hardware Telemetry.
+        </p>
+      </div>
+      <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
+        <button class="btn btn-cyan btn-sm" onclick="openAddUserModal()">
+          ➕ Register New User
+        </button>
+        <button class="btn btn-danger btn-sm" onclick="triggerEmergencyRemoteUnlock()">
+          ⚡ Emergency Unlock Pulse
+        </button>
+      </div>
+    </div>
+
+    <!-- KPI Metric Cards Grid (Real MongoDB Telemetry) -->
+    <div class="kpi-grid">
+      <div class="kpi-card blue">
+        <span class="kpi-label">Registered Users</span>
+        <span class="kpi-value" id="kpi-total-users">0</span>
+      </div>
+
+      <div class="kpi-card green">
+        <span class="kpi-label">Active Users</span>
+        <span class="kpi-value" id="kpi-active-users">0</span>
+      </div>
+
+      <div class="kpi-card amber">
+        <span class="kpi-label">Pending Approvals</span>
+        <span class="kpi-value" id="kpi-pending">0</span>
+      </div>
+
+      <div class="kpi-card green">
+        <span class="kpi-label">Successful Scans</span>
+        <span class="kpi-value" id="kpi-granted">0</span>
+      </div>
+
+      <div class="kpi-card red">
+        <span class="kpi-label">Failed Scans</span>
+        <span class="kpi-value" id="kpi-denied">0</span>
+      </div>
+
+      <div class="kpi-card">
+        <span class="kpi-label">ESP32 Hardware</span>
+        <span class="kpi-value" id="kpi-device-status" style="font-size: 1.3rem;">CONNECTING</span>
+      </div>
+    </div>
+
+    <!-- Recent Activity Bar -->
+    <div class="card" style="margin-bottom: 1.75rem; padding: 1rem 1.25rem;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+        <div style="display: flex; align-items: center; gap: 0.5rem;">
+          <span style="font-size: 1rem;">⚡</span>
+          <strong style="font-size: 0.9rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--accent-cyan);">Live Recent Access Activity</strong>
+        </div>
+        <small style="color: var(--text-muted); font-size: 0.78rem;" id="recent-activity-time">Real-time MongoDB Feed</small>
+      </div>
+      <div id="recent-activity-strip" style="display: flex; gap: 0.75rem; overflow-x: auto; padding-bottom: 4px;">
+        <span style="color: var(--text-muted); font-size: 0.85rem;">Listening for gate access scans...</span>
+      </div>
+    </div>
+
+    <!-- Navigation Tabs -->
+    <div class="tabs-nav">
+      <button class="tab-btn active" data-tab="users">
+        👥 User &amp; RFID Management
+      </button>
+      <button class="tab-btn" data-tab="pending">
+        Pending Approvals <span id="pending-tab-badge" class="tab-badge">0</span>
+      </button>
+      <button class="tab-btn" data-tab="visitors">
+        All Visitors
+      </button>
+      <button class="tab-btn" data-tab="offline">
+        Offline Code Issuance
+      </button>
+      <button class="tab-btn" data-tab="logs">
+        Access Audit Logs
+      </button>
+      <button class="tab-btn" data-tab="settings">
+        ✉️ Email &amp; SMS Setup
+      </button>
+    </div>
+
+    <!-- TAB 1: USER & RFID MANAGEMENT -->
+    <div id="tab-users" class="tab-pane active">
+      <div class="card">
+        <div class="table-toolbar">
+          <div>
+            <h3 style="font-size: 1.2rem;">Registered RFID Users (MongoDB)</h3>
+            <p style="font-size: 0.82rem; color: var(--text-muted); margin-top: 2px;">
+              Manage student, faculty, staff, and visitor accounts with unique RFID authentication.
+            </p>
+          </div>
+          <div class="filter-group">
+            <input type="text" id="users-search-input" class="filter-input" placeholder="🔍 Search name, email, ID, RFID..." style="min-width: 240px;" oninput="debounceUserSearch()">
+            <select id="users-filter-role" class="filter-input" onchange="loadUsers()">
+              <option value="">All Roles</option>
+              <option value="student">Student</option>
+              <option value="faculty">Faculty</option>
+              <option value="staff">Staff</option>
+              <option value="security">Security</option>
+              <option value="host">Host</option>
+              <option value="admin">Admin</option>
+            </select>
+            <select id="users-filter-status" class="filter-input" onchange="loadUsers()">
+              <option value="">All Statuses</option>
+              <option value="true">Active Only</option>
+              <option value="false">Inactive Only</option>
+            </select>
+            <button class="btn btn-cyan btn-sm" onclick="openAddUserModal()">➕ Add User</button>
+            <button class="btn btn-outline btn-sm" onclick="loadUsers()">🔄 Refresh</button>
+          </div>
+        </div>
+
+        <div class="table-responsive">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>User / ID</th>
+                <th>Contact Info</th>
+                <th>Role &amp; Department</th>
+                <th>RFID Card UID</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="users-tbody">
+              <tr><td colspan="6" style="text-align:center; color:var(--text-muted); padding:2rem;">Loading registered users from MongoDB...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 2: PENDING VISITOR REQUESTS -->
+    <div id="tab-pending" class="tab-pane">
+      <div class="card">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem;">
+          <h3 style="font-size: 1.15rem;">Pending Visitor Authorization Queue</h3>
+          <button class="btn btn-outline btn-sm" onclick="loadPendingVisitors()">🔄 Refresh Queue</button>
+        </div>
+
+        <div class="table-responsive">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Request ID</th>
+                <th>Visitor</th>
+                <th>Contact</th>
+                <th>Host</th>
+                <th>Purpose</th>
+                <th>Submitted</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="pending-visitors-tbody">
+              <tr><td colspan="7" style="text-align:center; color:var(--text-muted); padding:2rem;">Loading pending queue...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 3: ALL VISITORS -->
+    <div id="tab-visitors" class="tab-pane">
+      <div class="card">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem;">
+          <h3 style="font-size: 1.15rem;">All Visitor Records</h3>
+          <button class="btn btn-outline btn-sm" onclick="loadActiveVisitors()">🔄 Refresh</button>
+        </div>
+
+        <div class="table-responsive">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Request ID</th>
+                <th>Visitor</th>
+                <th>Host</th>
+                <th>Status</th>
+                <th>Purpose</th>
+                <th>Approved At</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="all-visitors-tbody">
+              <tr><td colspan="7" style="text-align:center; color:var(--text-muted); padding:2rem;">Loading visitors...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 4: OFFLINE TEMPORARY CODE ISSUANCE -->
+    <div id="tab-offline" class="tab-pane">
+      <div class="card" style="max-width: 650px;">
+        <h3 style="font-size: 1.2rem; margin-bottom: 0.5rem;">Issue Temporary Offline Access Code</h3>
+        <p style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 1.5rem;">
+          When internet or SMTP email service is down, hosts connected to the local gate network can generate a 6-digit one-time offline passcode.
+        </p>
+
+        <button class="btn btn-primary btn-lg" onclick="generateOfflineCode()">
+          🎲 Generate 6-Digit Offline Code
+        </button>
+
+        <div id="offline-code-display" style="margin-top: 1.75rem;"></div>
+      </div>
+    </div>
+
+    <!-- TAB 5: ACCESS AUDIT LOGS -->
+    <div id="tab-logs" class="tab-pane">
+      <div class="card">
+        <div class="table-toolbar">
+          <h3 style="font-size: 1.15rem;">Access Control Audit Trail</h3>
+          <div class="filter-group">
+            <select id="log-filter-result" class="filter-input" onchange="loadLogs()">
+              <option value="">All Results</option>
+              <option value="granted">Granted Only</option>
+              <option value="denied">Denied Only</option>
+            </select>
+            <select id="log-filter-type" class="filter-input" onchange="loadLogs()">
+              <option value="">All Methods</option>
+              <option value="user_rfid">RFID 2FA</option>
+              <option value="visitor_otp">Visitor OTP</option>
+              <option value="offline_code">Offline Codes</option>
+              <option value="admin_override">Admin Override</option>
+              <option value="unregistered_rfid">Unregistered Cards</option>
+            </select>
+            <button class="btn btn-outline btn-sm" onclick="loadLogs()">Apply</button>
+          </div>
+        </div>
+
+        <div class="table-responsive">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Timestamp</th>
+                <th>Identity</th>
+                <th>Result</th>
+                <th>Method</th>
+                <th>Details / Reason</th>
+                <th>State</th>
+              </tr>
+            </thead>
+            <tbody id="logs-tbody">
+              <tr><td colspan="6" style="text-align:center; color:var(--text-muted); padding:2rem;">Loading audit logs...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 6: EMAIL & NOTIFICATION SETTINGS -->
+    <div id="tab-settings" class="tab-pane">
+      <div class="grid grid-2">
+        <!-- SMTP Email Configuration Card -->
+        <div class="card">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.25rem;">
+            <h3 style="font-size:1.2rem; color:var(--accent-cyan); margin:0;">📧 Live Gmail / SMTP Delivery</h3>
+            <span id="smtp-status-badge" class="badge badge-amber" style="padding:4px 10px; font-size:0.75rem;">Loading...</span>
+          </div>
+
+          <p style="color:var(--text-secondary); font-size:0.88rem; line-height:1.5;">
+            Configure your Gmail account to send real 6-digit access OTPs directly to user and visitor mailboxes.
+          </p>
+
+          <form id="smtp-config-form" onsubmit="saveSmtpSettings(event)">
+            <div class="form-group">
+              <label class="form-label">Gmail / SMTP Email Address *</label>
+              <input type="email" id="smtp-user-input" class="form-control" placeholder="e.g. yourname@gmail.com" required>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Google 16-Character App Password *</label>
+              <input type="password" id="smtp-pass-input" class="form-control" placeholder="e.g. abcd efgh ijkl mnop" required>
+              <small style="color:var(--text-muted); font-size:0.75rem; display:block; margin-top:4px;">
+                💡 Generate at: <strong>Google Account &gt; Security &gt; 2-Step Verification &gt; App Passwords</strong>
+              </small>
+            </div>
+
+            <div style="display:grid; grid-template-columns: 2fr 1fr; gap:12px;">
+              <div class="form-group">
+                <label class="form-label">SMTP Host</label>
+                <input type="text" id="smtp-host-input" class="form-control" value="smtp.gmail.com">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Port</label>
+                <input type="number" id="smtp-port-input" class="form-control" value="587">
+              </div>
+            </div>
+
+            <button type="submit" id="save-smtp-btn" class="btn btn-primary" style="width:100%; margin-top:0.5rem;">
+              💾 Verify &amp; Save Credentials
+            </button>
+          </form>
+
+          <hr style="border:0; border-top:1px solid rgba(255,255,255,0.08); margin:1.5rem 0;">
+
+          <!-- Send Immediate Test Email -->
+          <h4 style="font-size:0.95rem; margin-bottom:0.75rem;">🧪 Send Test Email</h4>
+          <div style="display:flex; gap:8px;">
+            <input type="email" id="test-email-target" class="form-control" placeholder="Recipient email address...">
+            <button class="btn btn-outline" onclick="sendQuickTestEmail()" style="white-space:nowrap;">
+              Send Test
+            </button>
+          </div>
+        </div>
+
+        <!-- SMS & ESP32 Hardware Status Card -->
+        <div class="card">
+          <h3 style="font-size:1.2rem; color:var(--accent-blue); margin-bottom:1.25rem;">📡 Hardware &amp; SMS Status</h3>
+
+          <div style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08); border-radius:8px; padding:1rem; margin-bottom:1.25rem;">
+            <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
+              <span style="color:var(--text-muted); font-size:0.85rem;">Local IP (for ESP32 sketch):</span>
+              <strong style="color:var(--accent-cyan); font-family:var(--font-mono);">10.109.175.60:5000</strong>
+            </div>
+            <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
+              <span style="color:var(--text-muted); font-size:0.85rem;">Device API ID:</span>
+              <strong style="font-family:var(--font-mono);">ESP32_SECUREGATE_01</strong>
+            </div>
+            <div style="display:flex; justify-content:space-between;">
+              <span style="color:var(--text-muted); font-size:0.85rem;">Card Reader Auto-Sync:</span>
+              <span class="badge badge-green">ACTIVE (/api/device/last-scan)</span>
+            </div>
+          </div>
+
+          <h4 style="font-size:0.95rem; margin-bottom:0.75rem;">📱 Mobile SMS Gateways</h4>
+          <p style="color:var(--text-secondary); font-size:0.85rem; line-height:1.5;">
+            SecureGate AI automatically sends OTP via SMS to registered mobile numbers. Supports Fast2SMS (India) and Twilio (International). Configure in <code>backend/.env</code>:
+          </p>
+          <pre style="background:#070b14; border:1px solid rgba(0,240,255,0.2); padding:10px; border-radius:6px; font-size:0.78rem; color:#38bdf8; overflow-x:auto;">
+# India Mobile SMS (Fast2SMS)
+FAST2SMS_API_KEY=your_key_here
+
+# International SMS (Twilio)
+TWILIO_ACCOUNT_SID=your_sid
+TWILIO_AUTH_TOKEN=your_token
+TWILIO_PHONE_NUMBER=+1234567890</pre>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- ========================================================================= -->
+  <!-- MODAL 1: REGISTER NEW USER (With Scan RFID Card Auto-Fill & Simulation)   -->
+  <!-- ========================================================================= -->
+  <div id="add-user-modal" class="modal-backdrop">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <h3 style="font-size: 1.2rem; display: flex; align-items: center; gap: 0.5rem;">
+          <span>👤</span> Register New User in Database
+        </h3>
+        <button onclick="closeAddUserModal()" style="background:none; border:none; color:var(--text-muted); font-size:1.5rem; cursor:pointer;">&times;</button>
+      </div>
+      <form id="add-user-form">
+        <div class="modal-body">
+          <div class="form-group">
+            <label class="form-label" for="new-user-name">Full Name *</label>
+            <input type="text" id="new-user-name" class="form-control" placeholder="e.g. Dr. Ramesh Kumar" required>
+          </div>
+
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem;">
+            <div class="form-group">
+              <label class="form-label" for="new-user-email">Email Address *</label>
+              <input type="email" id="new-user-email" class="form-control" placeholder="ramesh@securegate.local" required>
+              <small style="color:var(--text-muted); font-size:0.75rem;">OTP will be sent here upon RFID tap</small>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="new-user-customid">Student / Employee ID</label>
+              <input type="text" id="new-user-customid" class="form-control" placeholder="e.g. STU-1042">
+            </div>
+          </div>
+
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem;">
+            <div class="form-group">
+              <label class="form-label" for="new-user-phone">Phone Number</label>
+              <input type="tel" id="new-user-phone" class="form-control" placeholder="e.g. +91 9876543210">
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="new-user-role">Role</label>
+              <select id="new-user-role" class="form-control">
+                <option value="student" selected>Student</option>
+                <option value="faculty">Faculty</option>
+                <option value="staff">Staff</option>
+                <option value="security">Security Officer</option>
+                <option value="host">Host</option>
+                <option value="admin">Administrator</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="new-user-dept">Department</label>
+            <input type="text" id="new-user-dept" class="form-control" placeholder="e.g. Computer Science &amp; IoT">
+          </div>
+
+          <!-- RFID UID Section with Auto-Fill Listener -->
+          <div class="form-group" style="background: rgba(0, 240, 255, 0.04); border: 1px solid rgba(0, 240, 255, 0.2); padding: 12px; border-radius: var(--radius-md);">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 6px;">
+              <label class="form-label" for="new-user-rfid" style="margin-bottom:0;">
+                💳 RFID Card UID (Hex)
+              </label>
+              <div style="display:flex; gap:6px;">
+                <button type="button" class="btn btn-cyan btn-sm" onclick="connectEsp32UsbSerialForInput('new-user-rfid')" style="font-weight:700;">
+                  🔌 USB Reader
+                </button>
+                <button type="button" id="scan-rfid-btn" class="btn btn-outline btn-sm" onclick="startRfidScanListener('new-user-rfid', 'scan-rfid-btn')" style="border-color: var(--accent-cyan); color: var(--accent-cyan);">
+                  📡 Wi-Fi Scan
+                </button>
+              </div>
+            </div>
+            
+            <input type="text" id="new-user-rfid" class="form-control" placeholder="e.g. 62 33 30 5C" style="font-family:var(--font-mono); text-transform:uppercase; font-weight:700; font-size:1.05rem;">
+            
+            <div id="scan-rfid-status" style="display:none; margin-top:8px; font-size:0.8rem; color:var(--accent-amber); align-items:center; gap:6px;">
+              <span class="status-dot" style="background:var(--accent-amber); animation: pulse 1s infinite;"></span>
+              <span id="scan-rfid-status-text">Listening for ESP32 card tap...</span>
+            </div>
+
+            <!-- Simulation Fallback Helper -->
+            <div style="margin-top: 10px; padding-top: 8px; border-top: 1px dashed rgba(255,255,255,0.1); font-size: 0.76rem; color: var(--text-muted); display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:6px;">
+              <span>⚡ Simulation Mode:</span>
+              <div style="display:flex; gap:6px;">
+                <button type="button" class="btn btn-outline btn-sm" style="font-size:0.72rem; padding:2px 8px;" onclick="simulateCardFill('new-user-rfid', '62 33 30 5C')">Hardware Card (62 33 30 5C)</button>
+                <button type="button" class="btn btn-outline btn-sm" style="font-size:0.72rem; padding:2px 8px;" onclick="simulateRandomCard('new-user-rfid')">🎲 Random Card</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-group" style="display:flex; align-items:center; gap:8px; margin-top:8px;">
+            <input type="checkbox" id="new-user-active" checked style="width:18px; height:18px; accent-color:var(--accent-green); cursor:pointer;">
+            <label for="new-user-active" style="cursor:pointer; font-size:0.9rem; font-weight:600; color:var(--text-primary); margin-bottom:0;">
+              Account Active (Authorized for gate access)
+            </label>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline" onclick="closeAddUserModal()">Cancel</button>
+          <button type="submit" id="save-user-btn" class="btn btn-cyan">Save User to MongoDB</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- MODAL 2: EDIT USER DETAILS                                                -->
+  <!-- ========================================================================= -->
+  <div id="edit-user-modal" class="modal-backdrop">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <h3 style="font-size: 1.2rem; display: flex; align-items: center; gap: 0.5rem;">
+          <span>✏️</span> Edit User &amp; RFID Permissions
+        </h3>
+        <button onclick="closeEditUserModal()" style="background:none; border:none; color:var(--text-muted); font-size:1.5rem; cursor:pointer;">&times;</button>
+      </div>
+      <form id="edit-user-form">
+        <input type="hidden" id="edit-user-id">
+        <div class="modal-body">
+          <div class="form-group">
+            <label class="form-label" for="edit-user-name">Full Name *</label>
+            <input type="text" id="edit-user-name" class="form-control" required>
+          </div>
+
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem;">
+            <div class="form-group">
+              <label class="form-label" for="edit-user-email">Email Address *</label>
+              <input type="email" id="edit-user-email" class="form-control" required>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="edit-user-customid">Student / Employee ID</label>
+              <input type="text" id="edit-user-customid" class="form-control">
+            </div>
+          </div>
+
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem;">
+            <div class="form-group">
+              <label class="form-label" for="edit-user-phone">Phone Number</label>
+              <input type="tel" id="edit-user-phone" class="form-control">
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="edit-user-role">Role</label>
+              <select id="edit-user-role" class="form-control">
+                <option value="student">Student</option>
+                <option value="faculty">Faculty</option>
+                <option value="staff">Staff</option>
+                <option value="security">Security Officer</option>
+                <option value="host">Host</option>
+                <option value="admin">Administrator</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="edit-user-dept">Department</label>
+            <input type="text" id="edit-user-dept" class="form-control">
+          </div>
+
+          <div class="form-group" style="background: rgba(0, 240, 255, 0.04); border: 1px solid rgba(0, 240, 255, 0.2); padding: 12px; border-radius: var(--radius-md);">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 6px;">
+              <label class="form-label" for="edit-user-rfid" style="margin-bottom:0;">
+                💳 RFID Card UID (Hex)
+              </label>
+              <button type="button" id="edit-scan-rfid-btn" class="btn btn-outline btn-sm" onclick="startRfidScanListener('edit-user-rfid', 'edit-scan-rfid-btn')" style="border-color: var(--accent-cyan); color: var(--accent-cyan);">
+                📡 Scan Card
+              </button>
+            </div>
+            
+            <input type="text" id="edit-user-rfid" class="form-control" style="font-family:var(--font-mono); text-transform:uppercase; font-weight:700; font-size:1.05rem;">
+            <small style="color:var(--text-muted); font-size:0.75rem;">Clear this field to unbind the RFID card from this user.</small>
+          </div>
+
+          <div class="form-group" style="display:flex; align-items:center; gap:8px; margin-top:8px;">
+            <input type="checkbox" id="edit-user-active" style="width:18px; height:18px; accent-color:var(--accent-green); cursor:pointer;">
+            <label for="edit-user-active" style="cursor:pointer; font-size:0.9rem; font-weight:600; color:var(--text-primary); margin-bottom:0;">
+              Account Active (Permit entry)
+            </label>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline" onclick="closeEditUserModal()">Cancel</button>
+          <button type="submit" id="update-user-btn" class="btn btn-cyan">Save Changes</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <footer class="footer">
+    <div>SecureGate AI — Administrator &amp; Host Portal</div>
+    <div class="footer-links">
+      <a href="index.html">Portal</a>
+      <a href="user.html">RFID Terminal</a>
+      <a href="visitor.html">Visitor Form</a>
+      <a href="verify-otp.html">Verify OTP</a>
+    </div>
+  </footer>
+
+  <script src="js/main.js"></script>
+  <script src="js/admin.js"></script>
+</body>
+</html>

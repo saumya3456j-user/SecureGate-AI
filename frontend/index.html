@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SecureGate AI — Intelligent Access & Security</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/components.css">
+</head>
+<body>
+
+  <!-- Navigation Bar -->
+  <nav class="navbar">
+    <a href="index.html" class="brand">
+      <div class="brand-icon">🛡️</div>
+      <div class="brand-text">
+        <div class="brand-title">
+          SECUREGATE AI
+          <span class="brand-badge">PRO</span>
+        </div>
+        <div class="brand-tagline">Intelligent Access. Reliable Security.</div>
+      </div>
+    </a>
+
+    <ul class="nav-links">
+      <li class="nav-item"><a href="index.html" class="active">Entry Portal</a></li>
+      <li class="nav-item"><a href="user.html">RFID User</a></li>
+      <li class="nav-item"><a href="visitor.html">Visitor Request</a></li>
+      <li class="nav-item"><a href="verify-otp.html">Verify OTP</a></li>
+      <li class="nav-item"><a href="admin.html">Host Dashboard</a></li>
+    </ul>
+
+    <div class="nav-status">
+      <div class="status-pill">
+        <div class="status-dot online" id="cloud-status-dot"></div>
+        <span id="cloud-status-text">Cloud API: Connecting...</span>
+      </div>
+      <div class="status-pill">
+        <div class="status-dot offline" id="hw-status-dot"></div>
+        <span id="hw-status-text">ESP32 Gate: Checking...</span>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Hero Portal Container -->
+  <main class="container">
+    <div style="text-align: center; margin: 3rem 0 2rem;">
+      <h1 style="font-size: 2.8rem; margin-bottom: 0.75rem; background: linear-gradient(135deg, #fff 40%, var(--accent-cyan)); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
+        Intelligent Smart Gate Access
+      </h1>
+      <p style="color: var(--text-secondary); font-size: 1.15rem; max-width: 620px; margin: 0 auto;">
+        Role-based dual-path authentication powered by offline-first ESP32 edge intelligence and secure email OTP verification.
+      </p>
+    </div>
+
+    <!-- Dual Role Access Choice Cards -->
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 2rem; margin: 2.5rem 0;">
+      
+      <!-- Option A: Registered User Card -->
+      <div class="card card-elevated" style="border-top: 4px solid var(--accent-cyan); display: flex; flex-direction: column; justify-content: space-between;">
+        <div>
+          <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:1.25rem;">
+            <div style="font-size: 2.5rem;">💳</div>
+            <span class="badge badge-approved">Instant Access</span>
+          </div>
+          <h2 style="font-size: 1.5rem; margin-bottom: 0.5rem;">Registered User Access</h2>
+          <p style="color: var(--text-secondary); font-size: 0.95rem; margin-bottom: 1.5rem;">
+            Faculty, staff, and enrolled students with registered RFID keycards. Authenticates directly against the ESP32 NVS memory with zero OTP required.
+          </p>
+          <ul style="list-style:none; color:var(--text-muted); font-size:0.88rem; display:flex; flex-direction:column; gap:0.5rem; margin-bottom:1.5rem;">
+            <li>⚡ <strong>&lt; 50ms</strong> instant RFID scan</li>
+            <li>🔋 100% functional without internet</li>
+            <li>🛡️ Anti-brute force tamper protection</li>
+          </ul>
+        </div>
+        <a href="user.html" class="btn btn-primary btn-lg" style="width:100%;">
+          Scan RFID Card ➔
+        </a>
+      </div>
+
+      <!-- Option B: Visitor Request Card -->
+      <div class="card card-elevated" style="border-top: 4px solid var(--accent-blue); display: flex; flex-direction: column; justify-content: space-between;">
+        <div>
+          <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:1.25rem;">
+            <div style="font-size: 2.5rem;">👤</div>
+            <span class="badge badge-pending">Host Approval</span>
+          </div>
+          <h2 style="font-size: 1.5rem; margin-bottom: 0.5rem;">Visitor Access Request</h2>
+          <p style="color: var(--text-secondary); font-size: 0.95rem; margin-bottom: 1.5rem;">
+            Guests, delivery partners, and prospective students. Submit an entry request to receive a secure, short-lived 6-digit OTP code directly to your email upon host approval.
+          </p>
+          <ul style="list-style:none; color:var(--text-muted); font-size:0.88rem; display:flex; flex-direction:column; gap:0.5rem; margin-bottom:1.5rem;">
+            <li>✉️ Automated Nodemailer OTP delivery</li>
+            <li>⏱️ 5-minute security expiry window</li>
+            <li>🔐 Single-use cryptographic authorization</li>
+          </ul>
+        </div>
+        <div style="display:flex; gap:0.75rem; flex-wrap:wrap;">
+          <a href="visitor.html" class="btn btn-cyan btn-lg" style="flex:1; min-width:140px;">
+            Request Access
+          </a>
+          <a href="verify-otp.html" class="btn btn-outline btn-lg" style="flex:1; min-width:140px;">
+            Enter OTP Code
+          </a>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Hardware Live Telemetry Preview Panel -->
+    <div class="hardware-panel" style="margin-top: 2rem;">
+      <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap:wrap; gap:1rem;">
+        <div>
+          <h3 style="font-size: 1.15rem; color: #fff;">ESP32 Edge Hardware Monitor</h3>
+          <p style="font-size: 0.82rem; color: var(--text-muted);">Real-time sensor telemetry & peripheral actuation</p>
+        </div>
+        <a href="admin.html" class="btn btn-outline btn-sm">Open Host Dashboard ➔</a>
+      </div>
+
+      <div class="hardware-grid">
+        <div class="hw-node">
+          <div class="hw-label">RC522 RFID</div>
+          <div class="hw-indicator" id="hw-rfid-status">📶</div>
+          <span style="font-size:0.75rem; color:var(--text-secondary);">SPI GPIO 5</span>
+        </div>
+
+        <div class="hw-node led-green">
+          <div class="hw-label">Green LED</div>
+          <div class="hw-indicator" id="hw-led-green">🟢</div>
+          <span style="font-size:0.75rem; color:var(--text-secondary);">GPIO 2 (Granted)</span>
+        </div>
+
+        <div class="hw-node led-red">
+          <div class="hw-label">Red LED</div>
+          <div class="hw-indicator" id="hw-led-red">🔴</div>
+          <span style="font-size:0.75rem; color:var(--text-secondary);">GPIO 4 (Denied)</span>
+        </div>
+
+        <div class="hw-node buzzer">
+          <div class="hw-label">Piezo Buzzer</div>
+          <div class="hw-indicator" id="hw-buzzer">🔊</div>
+          <span style="font-size:0.75rem; color:var(--text-secondary);">GPIO 15 (Tone)</span>
+        </div>
+
+        <div class="hw-node">
+          <div class="hw-label">Door Servo</div>
+          <div class="servo-arm-wrap">
+            <div class="servo-base"></div>
+            <div class="servo-arm" id="hw-servo-arm"></div>
+          </div>
+          <span class="servo-status-text" id="hw-servo-text">LOCKED (0°)</span>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div>
+      <strong>SecureGate AI</strong> — Advanced IoT Access Control System.
+    </div>
+    <div class="footer-links">
+      <a href="index.html">Portal</a>
+      <a href="user.html">RFID Terminal</a>
+      <a href="visitor.html">Visitor Form</a>
+      <a href="verify-otp.html">Verify OTP</a>
+      <a href="admin.html">Host Admin</a>
+    </div>
+  </footer>
+
+  <script src="js/main.js"></script>
+</body>
+</html>
+

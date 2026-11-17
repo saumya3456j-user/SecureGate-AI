@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>User RFID Terminal — SecureGate AI</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/components.css">
+</head>
+<body>
+
+  <!-- Navigation Bar -->
+  <nav class="navbar">
+    <a href="index.html" class="brand">
+      <div class="brand-icon">🛡️</div>
+      <div class="brand-text">
+        <div class="brand-title">SECUREGATE AI</div>
+        <div class="brand-tagline">Intelligent Access. Reliable Security.</div>
+      </div>
+    </a>
+
+    <ul class="nav-links">
+      <li class="nav-item"><a href="index.html">Entry Portal</a></li>
+      <li class="nav-item"><a href="user.html" class="active">RFID User</a></li>
+      <li class="nav-item"><a href="visitor.html">Visitor Request</a></li>
+      <li class="nav-item"><a href="verify-otp.html">Verify OTP</a></li>
+      <li class="nav-item"><a href="admin.html">Host Dashboard</a></li>
+    </ul>
+
+    <div class="nav-status">
+      <div class="status-pill">
+        <div class="status-dot online" id="cloud-status-dot"></div>
+        <span id="cloud-status-text">Cloud API: Online</span>
+      </div>
+      <div class="status-pill">
+        <div class="status-dot offline" id="hw-status-dot"></div>
+        <span id="hw-status-text">Gate Hardware</span>
+      </div>
+    </div>
+  </nav>
+
+  <main class="container">
+    <div style="max-width: 820px; margin: 1.5rem auto;">
+      
+      <!-- Terminal Header -->
+      <div style="text-align: center; margin-bottom: 2rem;">
+        <span class="badge badge-approved" style="margin-bottom:0.75rem;">Intelligent User Terminal</span>
+        <h1 style="font-size: 2.2rem; margin-top:0.4rem;">RFID Card &amp; 2FA Access</h1>
+        <p style="color: var(--text-secondary); font-size: 0.95rem;">
+          Hold your registered RFID card near the RC522 reader. The system automatically identifies you and delivers a single-use verification code to your registered email.
+        </p>
+      </div>
+
+      <!-- Live Hardware Panel (ESP32 Actuators) -->
+      <div class="hardware-panel" style="margin-bottom: 2rem;">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <h3 style="font-size: 1.05rem; color: #fff;">Hardware Gate Actuators (ESP32 DevKit)</h3>
+          <span style="font-size:0.8rem; color:var(--accent-cyan);" id="hw-status-badge">Online Cloud Link</span>
+        </div>
+        <div class="hardware-grid">
+          <div class="hw-node led-green">
+            <div class="hw-label">Green LED</div>
+            <div class="hw-indicator" id="hw-led-green">🟢</div>
+            <span style="font-size:0.75rem; color:var(--text-secondary);">GPIO 2</span>
+          </div>
+
+          <div class="hw-node led-red">
+            <div class="hw-label">Red LED</div>
+            <div class="hw-indicator" id="hw-led-red">🔴</div>
+            <span style="font-size:0.75rem; color:var(--text-secondary);">GPIO 4</span>
+          </div>
+
+          <div class="hw-node buzzer">
+            <div class="hw-label">Buzzer</div>
+            <div class="hw-indicator" id="hw-buzzer">🔊</div>
+            <span style="font-size:0.75rem; color:var(--text-secondary);">GPIO 15</span>
+          </div>
+
+          <div class="hw-node">
+            <div class="hw-label">Servo Gate</div>
+            <div class="servo-arm-wrap">
+              <div class="servo-base"></div>
+              <div class="servo-arm" id="hw-servo-arm"></div>
+            </div>
+            <span class="servo-status-text" id="hw-servo-text">LOCKED (0°)</span>
+          </div>
+        </div>
+
+        <!-- 3-Second Unlock Timer Progress Bar -->
+        <div style="height: 4px; background: rgba(255,255,255,0.08); border-radius: 2px; margin-top: 1.25rem; overflow: hidden;">
+          <div id="unlock-timer-bar" style="height: 100%; width: 0%; background: var(--accent-green); display: none;"></div>
+        </div>
+      </div>
+
+      <!-- STEP 1: RFID CARD SCANNER / SIMULATOR -->
+      <div class="card" id="card-scan-section" style="margin-bottom: 2rem;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 1.25rem;">
+          <h3 style="font-size: 1.2rem; display:flex; align-items:center; gap:0.5rem; margin:0;">
+            <span>💳</span> Step 1: Scan Registered RFID Card
+          </h3>
+          <span style="font-size:0.8rem; color:var(--text-muted);" id="rfid-live-listener-status">
+            📡 RC522 Reader Active
+          </span>
+        </div>
+
+        <!-- Dynamic MongoDB Card Buttons (Simulation / Fast Tap) -->
+        <div style="margin-bottom: 1.5rem;">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.6rem;">
+            <label class="form-label" style="margin-bottom:0;">Enrolled MongoDB Users (Tap to Authenticate):</label>
+            <button class="btn btn-outline btn-sm" onclick="loadDynamicCardholders()" style="font-size:0.75rem; padding:2px 8px;">🔄 Refresh Cards</button>
+          </div>
+          <div id="dynamic-cards-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 0.75rem;">
+            <div style="color:var(--text-muted); font-size:0.85rem; padding:10px;">Loading registered cards from MongoDB...</div>
+          </div>
+        </div>
+
+        <!-- Custom UID Input & Dedicated Hardware / Web RFID Scan -->
+        <div style="border-top: 1px solid var(--border-subtle); padding-top: 1.25rem;">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.6rem; flex-wrap:wrap; gap:8px;">
+            <label class="form-label" for="manual-uid-input" style="margin-bottom:0;">
+              Scan or Enter 4-Byte RFID Card UID:
+            </label>
+            <div style="display:flex; gap:8px; flex-wrap:wrap;">
+              <button type="button" id="terminal-usb-rfid-btn" class="btn btn-cyan btn-sm" onclick="connectEsp32UsbSerial()" style="font-weight:700;">
+                🔌 Connect USB Reader
+              </button>
+              <button type="button" id="terminal-scan-rfid-btn" class="btn btn-outline btn-sm" onclick="startTerminalRfidScanListener()" style="border-color: rgba(0,240,255,0.5); color:var(--accent-cyan); font-weight:600;">
+                📡 Wi-Fi Scan
+              </button>
+              <button type="button" class="btn btn-outline btn-sm" onclick="simulateActiveCardTap()" style="font-size:0.75rem; border-color: rgba(255,255,255,0.2);">
+                ⚡ Quick Scan Card
+              </button>
+            </div>
+          </div>
+
+          <div style="display:flex; gap:0.75rem;">
+            <input type="text" id="manual-uid-input" class="form-control" placeholder="e.g. 82 0D EE 5C" style="font-family:var(--font-mono); font-size:1.05rem; text-transform:uppercase; font-weight:700;">
+            <button id="scan-uid-btn" class="btn btn-primary" onclick="scanCard()">Identify Card ➔</button>
+          </div>
+
+          <!-- Active Hardware Listening Pulse Indicator -->
+          <div id="terminal-scan-status" style="display:none; margin-top:10px; padding:10px 14px; background:rgba(0, 240, 255, 0.08); border:1px solid var(--accent-cyan); border-radius:8px; font-size:0.85rem; color:var(--accent-cyan); align-items:center; gap:8px;">
+            <span class="status-dot online" style="animation: pulse 1s infinite;"></span>
+            <span id="terminal-scan-status-text">📡 Ready: Tap your physical RFID card on the RC522 reader now...</span>
+          </div>
+
+          <small style="color:var(--text-muted); font-size:0.75rem; margin-top:6px; display:block;">
+            Physical card tap on the RC522 reader or clicking "Scan RFID Card" automatically detects card in real-time.
+          </small>
+        </div>
+      </div>
+
+      <!-- STEP 2: USER IDENTIFIED & AUTOMATIC OTP PROMPT -->
+      <div id="user-identified-section" class="card card-elevated" style="display: none; margin-bottom: 2rem; border-color: var(--accent-cyan); animation: fadeIn 0.3s ease-out;">
+        <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom: 1rem;">
+          <div>
+            <span class="badge badge-approved" style="margin-bottom:0.4rem;">User Verified</span>
+            <h2 id="identified-user-name" style="font-size: 1.4rem; color: #fff; margin-bottom: 0.25rem;">—</h2>
+            <div style="font-size: 0.88rem; color: var(--text-secondary);">
+              Department: <strong id="identified-user-dept" style="color:#fff;">—</strong> | Role: <span id="identified-user-role" class="badge">—</span>
+            </div>
+          </div>
+          <button class="btn btn-outline btn-sm" onclick="resetTerminalState()" style="font-size:0.78rem;">
+            ✖️ Cancel / New Scan
+          </button>
+        </div>
+
+        <div style="background: rgba(0, 240, 255, 0.06); border: 1px solid rgba(0, 240, 255, 0.2); border-radius: var(--radius-md); padding: 14px; margin-bottom: 1.5rem;">
+          <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:8px;">
+            <div>
+              <div style="font-size:0.9rem; margin-bottom:4px;">
+                ✉️ Registered Email: <strong id="identified-masked-email" style="color:var(--accent-cyan); font-family:var(--font-mono);">—</strong>
+              </div>
+              <div id="identified-phone-row" style="font-size:0.88rem; color:var(--text-secondary); display:none;">
+                📱 Mobile Number: <strong id="identified-masked-phone" style="color:#38bdf8; font-family:var(--font-mono);">—</strong>
+              </div>
+            </div>
+            <div style="font-size:0.8rem; color:var(--text-muted);">
+              Card UID: <code id="identified-card-uid" style="color:#fff; font-family:var(--font-mono); font-weight:700;">—</code>
+            </div>
+          </div>
+          <div id="otp-dispatch-destination-note" style="margin-top:8px; font-size:0.8rem; color:var(--accent-green); display:flex; align-items:center; gap:6px; border-top:1px dashed rgba(255,255,255,0.08); padding-top:6px;">
+            <span>✨ 6-digit verification code dispatched to your registered destination</span>
+          </div>
+        </div>
+
+        <!-- 6-Digit OTP Entry Form -->
+        <div style="text-align: center; padding: 0.5rem 0;">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+            <div style="font-size:0.92rem; font-weight:600; color:var(--text-primary);">
+              Enter 6-Digit One-Time Password:
+            </div>
+            <div id="countdown-box" class="countdown-box">
+              <span id="countdown-text">⏱️ 05:00 Remaining</span>
+            </div>
+          </div>
+
+          <!-- Segmented Digits -->
+          <div class="otp-inputs" style="justify-content: center; gap: 10px; margin-bottom: 1.5rem;">
+            <input type="text" class="otp-digit" maxlength="1" pattern="[0-9]" inputmode="numeric" autofocus>
+            <input type="text" class="otp-digit" maxlength="1" pattern="[0-9]" inputmode="numeric">
+            <input type="text" class="otp-digit" maxlength="1" pattern="[0-9]" inputmode="numeric">
+            <input type="text" class="otp-digit" maxlength="1" pattern="[0-9]" inputmode="numeric">
+            <input type="text" class="otp-digit" maxlength="1" pattern="[0-9]" inputmode="numeric">
+            <input type="text" class="otp-digit" maxlength="1" pattern="[0-9]" inputmode="numeric">
+          </div>
+
+          <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
+            <button id="verify-user-otp-btn" class="btn btn-cyan btn-lg" style="min-width: 220px;" onclick="verifyUserOTP()">
+              🔓 Verify &amp; Unlock Gate
+            </button>
+            <button id="resend-user-otp-btn" class="btn btn-outline btn-lg" onclick="resendUserOTP()">
+              🔄 Resend Code
+            </button>
+          </div>
+
+          <!-- Simulation Fallback Helper (Only displayed when live Gmail SMTP is not yet configured) -->
+          <div id="sim-notice-box" style="display:none; margin-top:1.25rem; font-size:0.85rem; background:rgba(245,158,11,0.08); border:1px dashed var(--accent-amber); padding:10px 14px; border-radius:8px; text-align:center;"></div>
+
+          <div style="font-size:0.78rem; color:var(--text-muted); margin-top:1.25rem;">
+            Security Policy: Maximum 5 incorrect attempts before session lockout.
+          </div>
+        </div>
+      </div>
+
+      <!-- Result Banner for Denial / Success -->
+      <div id="scan-feedback-banner" class="card" style="display: none; margin-bottom: 2rem;">
+        <h3 id="feedback-banner-title" style="font-size: 1.25rem; margin-bottom: 0.5rem;"></h3>
+        <p id="feedback-banner-desc" style="color: var(--text-secondary); font-size: 0.95rem; margin-bottom:0;"></p>
+      </div>
+
+      <!-- Educational Architecture Callout -->
+      <div style="background: rgba(14,23,42,0.6); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); padding: 1.25rem; font-size: 0.85rem; color: var(--text-muted);">
+        <strong style="color: var(--accent-cyan);">💡 Dual-Layer Security:</strong>
+        SecureGate AI pairs 13.56MHz RFID card identification with cryptographically hashed, single-use email OTP delivery. Once verified, the backend authorizes the ESP32 to rotate the servo to 90° for exactly 3 seconds before automatically relocking.
+      </div>
+
+    </div>
+  </main>
+
+  <footer class="footer">
+    <div>SecureGate AI — User Access Terminal</div>
+    <div class="footer-links">
+      <a href="index.html">Portal</a>
+      <a href="visitor.html">Visitor Form</a>
+      <a href="verify-otp.html">Verify OTP</a>
+      <a href="admin.html">Dashboard</a>
+    </div>
+  </footer>
+
+  <script src="js/main.js"></script>
+  <script src="js/user.js"></script>
+</body>
+</html>

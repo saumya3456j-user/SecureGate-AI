@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Visitor Access Request — SecureGate AI</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/components.css">
+</head>
+<body>
+
+  <!-- Navigation Bar -->
+  <nav class="navbar">
+    <a href="index.html" class="brand">
+      <div class="brand-icon">🛡️</div>
+      <div class="brand-text">
+        <div class="brand-title">SECUREGATE AI</div>
+        <div class="brand-tagline">Intelligent Access. Reliable Security.</div>
+      </div>
+    </a>
+
+    <ul class="nav-links">
+      <li class="nav-item"><a href="index.html">Entry Portal</a></li>
+      <li class="nav-item"><a href="user.html">RFID User</a></li>
+      <li class="nav-item"><a href="visitor.html" class="active">Visitor Request</a></li>
+      <li class="nav-item"><a href="verify-otp.html">Verify OTP</a></li>
+      <li class="nav-item"><a href="admin.html">Host Dashboard</a></li>
+    </ul>
+
+    <div class="nav-status">
+      <div class="status-pill">
+        <div class="status-dot online" id="cloud-status-dot"></div>
+        <span id="cloud-status-text">Cloud API: Online</span>
+      </div>
+    </div>
+  </nav>
+
+  <main class="container">
+    <div style="max-width: 650px; margin: 1.5rem auto;">
+      
+      <div style="text-align: center; margin-bottom: 2rem;">
+        <span class="badge badge-pending" style="margin-bottom:0.75rem;">Guest Verification Flow</span>
+        <h1 style="font-size: 2.2rem; margin-top:0.4rem;">Visitor Access Request</h1>
+        <p style="color: var(--text-secondary); font-size: 0.95rem;">
+          Please complete your details. Your host will be notified immediately to approve your entry and dispatch a single-use OTP.
+        </p>
+      </div>
+
+      <!-- Visitor Submission Form -->
+      <div id="form-card" class="card card-elevated">
+        <form id="visitor-request-form">
+          <div class="form-group">
+            <label class="form-label" for="visitor-name">Your Full Name *</label>
+            <input type="text" id="visitor-name" class="form-control" placeholder="e.g. Rahul Verma" required>
+          </div>
+
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem;">
+            <div class="form-group">
+              <label class="form-label" for="visitor-email">Your Email Address *</label>
+              <input type="email" id="visitor-email" class="form-control" placeholder="rahul@example.com" required>
+              <small style="color:var(--text-muted); font-size:0.75rem;">OTP will be delivered here</small>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="visitor-contact">Contact Number (Optional)</label>
+              <input type="tel" id="visitor-contact" class="form-control" placeholder="+91 98765 43210">
+            </div>
+          </div>
+
+          <div style="display:grid; grid-template-columns:1.2fr 1fr; gap:1rem;">
+            <div class="form-group">
+              <label class="form-label" for="host-name">Host Name or Department *</label>
+              <input type="text" id="host-name" class="form-control" placeholder="e.g. Prof. Sharma / IoT Lab" required>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="host-email">Host Email (Optional)</label>
+              <input type="email" id="host-email" class="form-control" placeholder="host@securegate.local">
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="visit-purpose">Purpose of Visit *</label>
+            <textarea id="visit-purpose" class="form-control" rows="3" placeholder="e.g. Attending project demonstration, lab inspection, or guest lecture" required></textarea>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="visit-duration">Expected Duration</label>
+            <select id="visit-duration" class="form-control">
+              <option value="30">30 Minutes</option>
+              <option value="60" selected>1 Hour</option>
+              <option value="120">2 Hours</option>
+              <option value="240">4 Hours</option>
+              <option value="480">Full Day (8 Hours)</option>
+            </select>
+          </div>
+
+          <button type="submit" id="submit-btn" class="btn btn-cyan btn-lg" style="width:100%; margin-top:0.5rem;">
+            Submit Access Request ➔
+          </button>
+        </form>
+      </div>
+
+      <!-- Confirmation Screen (Hidden Initially) -->
+      <div id="confirmation-card" class="card" style="display: none; border-color: var(--accent-cyan); text-align: center; padding: 2.5rem 2rem;">
+        <div style="font-size: 3rem; margin-bottom: 1rem;">📨</div>
+        <h2 style="font-size: 1.6rem; color: #fff; margin-bottom: 0.5rem;">Request Submitted!</h2>
+        <p style="color: var(--text-secondary); margin-bottom: 1.5rem;">
+          Your access request has been sent to your host for security verification.
+        </p>
+
+        <div style="background: rgba(0, 240, 255, 0.08); border: 2px dashed rgba(0, 240, 255, 0.35); border-radius: var(--radius-md); padding: 1.25rem; margin: 1.5rem 0;">
+          <div style="font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-muted); margin-bottom: 0.35rem;">
+            Your Unique Request ID
+          </div>
+          <div id="conf-req-id" style="font-size: 2.2rem; font-weight: 900; letter-spacing: 4px; color: var(--accent-cyan); font-family: var(--font-mono);">
+            REQ-XXXXXX
+          </div>
+          <button class="btn btn-outline btn-sm" style="margin-top:0.75rem;" onclick="copyRequestId()">
+            📋 Copy Request ID
+          </button>
+        </div>
+
+        <div style="text-align: left; background: rgba(14,23,42,0.8); border: 1px solid var(--border-subtle); border-radius: 8px; padding: 14px 18px; font-size: 0.9rem; margin-bottom: 1.75rem;">
+          <div><strong>Visitor:</strong> <span id="conf-visitor-name"></span></div>
+          <div><strong>Email:</strong> <span id="conf-visitor-email"></span></div>
+          <div><strong>Host:</strong> <span id="conf-host-name"></span></div>
+          <div><strong>Status:</strong> <span class="badge badge-pending">Pending Host Approval</span></div>
+        </div>
+
+        <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
+          <a id="go-verify-btn" href="verify-otp.html" class="btn btn-primary btn-lg">
+            Go to OTP Verification Screen ➔
+          </a>
+          <a href="index.html" class="btn btn-outline btn-lg">
+            Return to Portal
+          </a>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <footer class="footer">
+    <div>SecureGate AI — Visitor Management</div>
+    <div class="footer-links">
+      <a href="index.html">Portal</a>
+      <a href="user.html">RFID Terminal</a>
+      <a href="verify-otp.html">Verify OTP</a>
+      <a href="admin.html">Dashboard</a>
+    </div>
+  </footer>
+
+  <script src="js/main.js"></script>
+  <script src="js/visitor.js"></script>
+</body>
+</html>
+

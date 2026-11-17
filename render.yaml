@@ -1,0 +1,50 @@
+services:
+  - type: web
+    name: securegate-ai
+    runtime: node
+    plan: free
+    region: oregon
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+      - key: MONGODB_URI
+        sync: false # Set this in Render Dashboard to your MongoDB Atlas connection string
+      - key: JWT_SECRET
+        generateValue: true
+      - key: JWT_EXPIRES_IN
+        value: 8h
+      - key: DEVICE_ID
+        value: ESP32_SECUREGATE_01
+      - key: DEVICE_API_KEY
+        generateValue: true
+      - key: SMTP_HOST
+        value: smtp.gmail.com
+      - key: SMTP_PORT
+        value: 587
+      - key: SMTP_SECURE
+        value: false
+      - key: SMTP_USER
+        value: muthmares06@gmail.com
+      - key: SMTP_PASS
+        value: nyjomnbqheytorgu
+      - key: SMTP_FROM_NAME
+        value: SecureGate AI
+      - key: SMTP_FROM_EMAIL
+        value: muthmares06@gmail.com
+      - key: EMAIL_SIMULATION_MODE
+        value: false
+      - key: SMS_SIMULATION_MODE
+        value: true
+      - key: OTP_EXPIRY_MINUTES
+        value: 5
+      - key: OTP_MAX_ATTEMPTS
+        value: 5
+      - key: OTP_RESEND_COOLDOWN_SECONDS
+        value: 60
+      - key: COMMAND_EXPIRY_SECONDS
+        value: 30

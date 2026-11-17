@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Verify OTP — SecureGate AI</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/components.css">
+</head>
+<body>
+
+  <!-- Navigation Bar -->
+  <nav class="navbar">
+    <a href="index.html" class="brand">
+      <div class="brand-icon">🛡️</div>
+      <div class="brand-text">
+        <div class="brand-title">SECUREGATE AI</div>
+        <div class="brand-tagline">Intelligent Access. Reliable Security.</div>
+      </div>
+    </a>
+
+    <ul class="nav-links">
+      <li class="nav-item"><a href="index.html">Entry Portal</a></li>
+      <li class="nav-item"><a href="user.html">RFID User</a></li>
+      <li class="nav-item"><a href="visitor.html">Visitor Request</a></li>
+      <li class="nav-item"><a href="verify-otp.html" class="active">Verify OTP</a></li>
+      <li class="nav-item"><a href="admin.html">Host Dashboard</a></li>
+    </ul>
+
+    <div class="nav-status">
+      <div class="status-pill">
+        <div class="status-dot online" id="cloud-status-dot"></div>
+        <span id="cloud-status-text">Cloud API</span>
+      </div>
+    </div>
+  </nav>
+
+  <main class="container">
+    <div style="max-width: 680px; margin: 1.5rem auto;">
+      
+      <div style="text-align: center; margin-bottom: 2rem;">
+        <span class="badge badge-completed" style="margin-bottom:0.75rem;">Gate Verification</span>
+        <h1 style="font-size: 2.2rem; margin-top:0.4rem;">Visitor OTP Entry</h1>
+        <p style="color: var(--text-secondary); font-size: 0.95rem;">
+          Enter your 6-digit access code sent to your email to trigger the ESP32 gate actuator.
+        </p>
+      </div>
+
+      <!-- Hardware Actuator Panel -->
+      <div class="hardware-panel" style="margin-bottom: 2rem;">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <h3 style="font-size: 1.05rem; color: #fff;">ESP32 Gate Status</h3>
+          <span style="font-size:0.8rem; color:var(--accent-cyan);">Hardware Linked</span>
+        </div>
+        <div class="hardware-grid">
+          <div class="hw-node led-green">
+            <div class="hw-label">Green LED</div>
+            <div class="hw-indicator" id="hw-led-green">🟢</div>
+            <span style="font-size:0.75rem; color:var(--text-secondary);">GPIO 2</span>
+          </div>
+
+          <div class="hw-node led-red">
+            <div class="hw-label">Red LED</div>
+            <div class="hw-indicator" id="hw-led-red">🔴</div>
+            <span style="font-size:0.75rem; color:var(--text-secondary);">GPIO 4</span>
+          </div>
+
+          <div class="hw-node buzzer">
+            <div class="hw-label">Buzzer</div>
+            <div class="hw-indicator" id="hw-buzzer">🔊</div>
+            <span style="font-size:0.75rem; color:var(--text-secondary);">GPIO 15</span>
+          </div>
+
+          <div class="hw-node">
+            <div class="hw-label">Servo Gate</div>
+            <div class="servo-arm-wrap">
+              <div class="servo-base"></div>
+              <div class="servo-arm" id="hw-servo-arm"></div>
+            </div>
+            <span class="servo-status-text" id="hw-servo-text">LOCKED (0°)</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 1: Request Lookup Box -->
+      <div class="card" style="margin-bottom: 1.75rem;">
+        <label class="form-label" for="input-request-id">Enter Your Visitor Request ID:</label>
+        <div style="display: flex; gap: 0.75rem;">
+          <input type="text" id="input-request-id" class="form-control" placeholder="e.g. REQ-A1B2C3" style="font-family:var(--font-mono); font-size:1.1rem; text-transform:uppercase;">
+          <button id="lookup-btn" class="btn btn-primary" style="white-space:nowrap;">
+            Find Request
+          </button>
+        </div>
+      </div>
+
+      <!-- Step 2: Visitor Information Card (Populated after lookup) -->
+      <div id="visitor-info-box" class="card card-elevated" style="display: none; margin-bottom: 1.75rem;">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1rem;">
+          <div>
+            <h3 id="disp-visitor-name" style="font-size: 1.3rem; margin-bottom: 0.25rem;">—</h3>
+            <div style="font-size: 0.85rem; color: var(--text-muted);">
+              OTP Dispatched to: <strong id="disp-masked-email" style="color:var(--text-primary);">—</strong>
+            </div>
+            <div id="disp-phone-row" style="font-size: 0.85rem; color: var(--text-muted); display:none; margin-top:2px;">
+              Mobile SMS: <strong id="disp-masked-phone" style="color:#38bdf8; font-family:var(--font-mono);">—</strong>
+            </div>
+          </div>
+          <span id="disp-status-badge" class="badge">Checking</span>
+        </div>
+
+        <div style="font-size: 0.88rem; color: var(--text-secondary); border-top: 1px solid var(--border-subtle); padding-top: 0.75rem;">
+          Visiting Host: <strong id="disp-host-name" style="color:#fff;">—</strong>
+        </div>
+      </div>
+
+      <!-- Step 3: Segmented 6-Digit OTP Interactive Section -->
+      <div id="otp-interactive-section" class="card" style="display: none; text-align: center; margin-bottom: 2rem;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+          <div style="font-size:0.9rem; font-weight:600; color:var(--text-secondary);">Enter 6-Digit Verification Code:</div>
+          <div id="countdown-box" class="countdown-box">
+            <span id="countdown-text">05:00 Remaining</span>
+          </div>
+        </div>
+
+        <!-- 6 Segmented Digit Boxes -->
+        <div class="otp-inputs">
+          <input type="text" class="otp-digit" maxlength="1" pattern="[0-9]" inputmode="numeric" autofocus>
+          <input type="text" class="otp-digit" maxlength="1" pattern="[0-9]" inputmode="numeric">
+          <input type="text" class="otp-digit" maxlength="1" pattern="[0-9]" inputmode="numeric">
+          <input type="text" class="otp-digit" maxlength="1" pattern="[0-9]" inputmode="numeric">
+          <input type="text" class="otp-digit" maxlength="1" pattern="[0-9]" inputmode="numeric">
+          <input type="text" class="otp-digit" maxlength="1" pattern="[0-9]" inputmode="numeric">
+        </div>
+
+        <div style="display: flex; gap: 1rem; justify-content: center; margin-top: 1.5rem; flex-wrap: wrap;">
+          <button id="verify-otp-btn" class="btn btn-cyan btn-lg" style="min-width: 220px;">
+            🔓 Verify & Unlock Gate
+          </button>
+          <button id="resend-otp-btn" class="btn btn-outline btn-lg">
+            🔄 Resend OTP
+          </button>
+        </div>
+
+        <div style="font-size:0.8rem; color:var(--text-muted); margin-top:1.25rem;">
+          Security limit: Maximum 5 attempts allowed. Resend cooldown: 60 seconds.
+        </div>
+      </div>
+
+      <!-- Success Banner (Hidden) -->
+      <div id="verification-success-banner" class="card" style="display: none; background: rgba(16,185,129,0.15); border-color: var(--accent-green); text-align: center; padding: 2rem;"></div>
+
+    </div>
+  </main>
+
+  <footer class="footer">
+    <div>SecureGate AI — OTP Verification Gateway</div>
+    <div class="footer-links">
+      <a href="index.html">Portal</a>
+      <a href="user.html">RFID Terminal</a>
+      <a href="visitor.html">Visitor Form</a>
+      <a href="admin.html">Dashboard</a>
+    </div>
+  </footer>
+
+  <script src="js/main.js"></script>
+  <script src="js/verify-otp.js"></script>
+</body>
+</html>
+
