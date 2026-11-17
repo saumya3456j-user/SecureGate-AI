@@ -37,7 +37,9 @@ const verifyRfid = async (req, res) => {
           'lastScannedCard.uid': cleanUid,
           'lastScannedCard.displayUid': displayUid,
           'lastScannedCard.scannedAt': new Date(),
-          'lastScannedCard.source': 'terminal'
+          'lastScannedCard.source': 'terminal',
+          'lastScannedCard.adminConsumedAt': null,
+          'lastScannedCard.userConsumedAt': null
         }
       },
       { upsert: true }

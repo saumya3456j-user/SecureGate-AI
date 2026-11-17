@@ -581,17 +581,36 @@ TWILIO_PHONE_NUMBER=+1234567890</pre>
           </div>
 
           <div class="form-group" style="background: rgba(0, 240, 255, 0.04); border: 1px solid rgba(0, 240, 255, 0.2); padding: 12px; border-radius: var(--radius-md);">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 6px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 6px; flex-wrap:wrap; gap:6px;">
               <label class="form-label" for="edit-user-rfid" style="margin-bottom:0;">
                 💳 RFID Card UID (Hex)
               </label>
-              <button type="button" id="edit-scan-rfid-btn" class="btn btn-outline btn-sm" onclick="startRfidScanListener('edit-user-rfid', 'edit-scan-rfid-btn')" style="border-color: var(--accent-cyan); color: var(--accent-cyan);">
-                📡 Scan Card
-              </button>
+              <div style="display:flex; gap:6px;">
+                <button type="button" class="btn btn-cyan btn-sm" onclick="connectEsp32UsbSerialForInput('edit-user-rfid')">
+                  🔌 USB Reader
+                </button>
+                <button type="button" id="edit-scan-rfid-btn" class="btn btn-outline btn-sm" onclick="startRfidScanListener('edit-user-rfid', 'edit-scan-rfid-btn')" style="border-color: var(--accent-cyan); color: var(--accent-cyan);">
+                  📡 Wi-Fi Scan
+                </button>
+              </div>
             </div>
             
             <input type="text" id="edit-user-rfid" class="form-control" style="font-family:var(--font-mono); text-transform:uppercase; font-weight:700; font-size:1.05rem;">
-            <small style="color:var(--text-muted); font-size:0.75rem;">Clear this field to unbind the RFID card from this user.</small>
+            
+            <div id="edit-scan-rfid-status" style="display:none; margin-top:8px; font-size:0.8rem; color:var(--accent-amber); align-items:center; gap:6px;">
+              <span class="status-dot" style="background:var(--accent-amber); animation: pulse 1s infinite;"></span>
+              <span id="edit-scan-rfid-status-text">Listening for ESP32 card tap...</span>
+            </div>
+
+            <!-- Quick Auto-Fill Helpers -->
+            <div style="margin-top: 8px; padding-top: 6px; border-top: 1px dashed rgba(255,255,255,0.1); font-size: 0.76rem; color: var(--text-muted); display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:6px;">
+              <span>⚡ Quick Fill:</span>
+              <div style="display:flex; gap:6px;">
+                <button type="button" class="btn btn-outline btn-sm" style="font-size:0.72rem; padding:2px 8px;" onclick="simulateCardFill('edit-user-rfid', '82 0D EE 5C')">Physical Card (82 0D EE 5C)</button>
+                <button type="button" class="btn btn-outline btn-sm" style="font-size:0.72rem; padding:2px 8px;" onclick="simulateRandomCard('edit-user-rfid')">🎲 Random Card</button>
+              </div>
+            </div>
+            <small style="color:var(--text-muted); font-size:0.75rem; margin-top:4px; display:block;">Clear this field to unbind the RFID card from this user.</small>
           </div>
 
           <div class="form-group" style="display:flex; align-items:center; gap:8px; margin-top:8px;">

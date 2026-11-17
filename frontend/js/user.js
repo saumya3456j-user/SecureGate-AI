@@ -91,11 +91,11 @@ let lastProcessedScanTime = 0;
 
 function startHardwareScanPolling() {
   hardwarePollTimer = setInterval(async () => {
-    // Only poll when not currently inside an active OTP verification session or unlock cycle
-    if (currentSessionId || isUnlocking) return;
+    // Only poll when this tab is actively visible and not inside an active OTP verification session or unlock cycle
+    if (document.hidden || currentSessionId || isUnlocking) return;
 
     try {
-      const res = await fetch(`${API_BASE}/device/last-scan?consume=true`);
+      const res = await fetch(`${API_BASE}/device/last-scan?consume=true&source=user`);
       const data = await res.json();
 
       if (res.ok && data.hasScan && data.scan && data.scan.uid) {
@@ -305,7 +305,7 @@ function startTerminalRfidScanListener() {
     }
 
     try {
-      const res = await fetch(`${API_BASE}/device/last-scan?consume=true`);
+      const res = await fetch(`${API_BASE}/device/last-scan?consume=true&source=user`);
       const data = await res.json();
       if (res.ok && data.hasScan && data.scan && data.scan.displayUid) {
         clearInterval(terminalScanInterval);

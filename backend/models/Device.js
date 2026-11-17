@@ -65,7 +65,9 @@ const DeviceSchema = new mongoose.Schema({
     uid: { type: String, default: null },
     displayUid: { type: String, default: null },
     scannedAt: { type: Date, default: null },
-    source: { type: String, enum: ['hardware', 'simulation', 'terminal', 'web'], default: 'hardware' }
+    source: { type: String, enum: ['hardware', 'simulation', 'terminal', 'web'], default: 'hardware' },
+    adminConsumedAt: { type: Date, default: null },
+    userConsumedAt: { type: Date, default: null }
   },
   // Pending one-time command queue for ESP32
   pendingCommand: {

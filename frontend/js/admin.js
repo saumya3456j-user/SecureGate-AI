@@ -394,14 +394,14 @@ async function openEditUserModal(userId) {
     if (res.ok && data.success) {
       const u = data.user;
       document.getElementById('edit-user-id').value = u.id;
-      document.getElementById('edit-user-name').value = u.name;
-      document.getElementById('edit-user-email').value = u.email;
-      document.getElementById('edit-user-customid').value = u.customId;
-      document.getElementById('edit-user-phone').value = u.phone;
-      document.getElementById('edit-user-role').value = u.role;
-      document.getElementById('edit-user-dept').value = u.department;
-      document.getElementById('edit-user-rfid').value = u.rfidUid;
-      document.getElementById('edit-user-active').checked = u.active;
+      document.getElementById('edit-user-name').value = u.name || '';
+      document.getElementById('edit-user-email').value = u.email || '';
+      document.getElementById('edit-user-customid').value = u.customId || '';
+      document.getElementById('edit-user-phone').value = u.phone || '';
+      document.getElementById('edit-user-role').value = u.role || 'student';
+      document.getElementById('edit-user-dept').value = u.department || '';
+      document.getElementById('edit-user-rfid').value = u.rfidUid ? formatRfidDisplay(u.rfidUid) : '';
+      document.getElementById('edit-user-active').checked = Boolean(u.active);
 
       modal.classList.add('active');
     } else {
@@ -538,19 +538,28 @@ async function deleteUser(userId, userName) {
 // 3. SCAN RFID CARD AUTO-FILL LISTENER & SIMULATION HELPERS
 // =========================================================================
 
+function formatRfidDisplay(uid) {
+  if (!uid) return '';
+  const clean = String(uid).replace(/[^a-fA-F0-9]/g, '').toUpperCase();
+  return clean.match(/.{1,2}/g)?.join(' ') || clean;
+}
+
 function startRfidScanListener(targetInputId, btnId) {
   stopRfidScanListener();
 
   const btn = document.getElementById(btnId);
-  const statusBox = document.getElementById('scan-rfid-status');
-  const statusText = document.getElementById('scan-rfid-status-text');
+  const isEdit = btnId === 'edit-scan-rfid-btn';
+  const statusBox = document.getElementById(isEdit ? 'edit-scan-rfid-status' : 'scan-rfid-status');
+  const statusText = document.getElementById(isEdit ? 'edit-scan-rfid-status-text' : 'scan-rfid-status-text');
   const targetInput = document.getElementById(targetInputId);
 
+  const timeoutMs = 30000;
+  const startTime = Date.now();
   let secondsRemaining = 30;
 
   if (btn) {
     btn.disabled = true;
-    btn.textContent = `📡 Tap card on ESP32 (${secondsRemaining}s)...`;
+    btn.textContent = `📡 Tap card (${secondsRemaining}s)...`;
   }
   if (statusBox) statusBox.style.display = 'flex';
   if (statusText) statusText.textContent = `Waiting for card scan on ESP32 reader... (${secondsRemaining}s remaining)`;
@@ -558,24 +567,27 @@ function startRfidScanListener(targetInputId, btnId) {
   showToast('📡 Listening for card tap! Tap your RFID card on the RC522 scanner now.', 'info', 4000);
 
   rfidScanTimer = setInterval(async () => {
-    secondsRemaining--;
-    if (btn) btn.textContent = `📡 Tap card on ESP32 (${secondsRemaining}s)...`;
+    const elapsed = Date.now() - startTime;
+    secondsRemaining = Math.max(0, Math.ceil((timeoutMs - elapsed) / 1000));
+
+    if (btn) btn.textContent = `📡 Tap card (${secondsRemaining}s)...`;
     if (statusText) statusText.textContent = `Waiting for card scan on ESP32 reader... (${secondsRemaining}s remaining)`;
 
-    if (secondsRemaining <= 0) {
+    if (elapsed >= timeoutMs) {
       stopRfidScanListener(btnId);
-      showToast('Scan listener timed out. Click Scan again when ready.', 'warn');
+      showToast('Scan listener timed out. Click "Wi-Fi Scan" to try again or use Quick Fill.', 'warn');
       return;
     }
 
     try {
-      const res = await fetch(`${API_BASE}/device/last-scan?consume=true`);
+      const res = await fetch(`${API_BASE}/device/last-scan?consume=true&source=admin`);
       const data = await res.json();
 
-      if (res.ok && data.hasScan && data.scan && data.scan.displayUid) {
+      if (res.ok && data.hasScan && data.scan && (data.scan.displayUid || data.scan.uid)) {
+        const detected = data.scan.displayUid || data.scan.uid;
         // Auto-fill UID into target input field!
         if (targetInput) {
-          targetInput.value = data.scan.displayUid;
+          targetInput.value = detected;
           targetInput.style.borderColor = 'var(--accent-cyan)';
           targetInput.style.boxShadow = '0 0 15px rgba(0, 240, 255, 0.4)';
           setTimeout(() => {
@@ -584,10 +596,10 @@ function startRfidScanListener(targetInputId, btnId) {
         }
 
         stopRfidScanListener(btnId);
-        showToast(`✨ Detected Card UID: ${data.scan.displayUid}! Field auto-filled.`, 'success');
+        showToast(`✨ Detected Card UID: ${detected}! Field auto-filled.`, 'success');
       }
     } catch (err) {}
-  }, 1500);
+  }, 800);
 }
 
 function stopRfidScanListener(btnId) {
@@ -596,19 +608,21 @@ function stopRfidScanListener(btnId) {
     rfidScanTimer = null;
   }
 
-  const btn = document.getElementById(btnId || 'scan-rfid-btn');
+  const btn = document.getElementById('scan-rfid-btn');
   const editBtn = document.getElementById('edit-scan-rfid-btn');
   const statusBox = document.getElementById('scan-rfid-status');
+  const editStatusBox = document.getElementById('edit-scan-rfid-status');
 
   if (btn) {
     btn.disabled = false;
-    btn.textContent = '📡 Scan RFID Card';
+    btn.textContent = '📡 Wi-Fi Scan';
   }
   if (editBtn) {
     editBtn.disabled = false;
-    editBtn.textContent = '📡 Scan Card';
+    editBtn.textContent = '📡 Wi-Fi Scan';
   }
   if (statusBox) statusBox.style.display = 'none';
+  if (editStatusBox) editStatusBox.style.display = 'none';
 }
 
 function simulateCardFill(inputId, uid) {

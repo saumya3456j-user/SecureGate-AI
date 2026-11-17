@@ -300,10 +300,9 @@ const updateUser = async (req, res) => {
         if (cleanUid !== user.rfidUid) {
           const existingRfid = await User.findOne({ rfidUid: cleanUid, _id: { $ne: id } });
           if (existingRfid) {
-            return res.status(400).json({
-              success: false,
-              error: `RFID Card '${formatRfidDisplay(cleanUid)}' is already assigned to ${existingRfid.name}`
-            });
+            existingRfid.rfidUid = undefined;
+            await existingRfid.save();
+            logInfo('USER-MGMT', `RFID Card ${formatRfidDisplay(cleanUid)} automatically unlinked from '${existingRfid.name}' and transferred to '${user.name}'`);
           }
           user.rfidUid = cleanUid;
         }

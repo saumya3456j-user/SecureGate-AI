@@ -89,7 +89,9 @@ const handleRfidEvent = async (req, res) => {
           'lastScannedCard.uid': cleanUid,
           'lastScannedCard.displayUid': displayUid,
           'lastScannedCard.scannedAt': new Date(),
-          'lastScannedCard.source': 'hardware'
+          'lastScannedCard.source': 'hardware',
+          'lastScannedCard.adminConsumedAt': null,
+          'lastScannedCard.userConsumedAt': null
         }
       },
       { upsert: true }
@@ -408,19 +410,30 @@ const getLastScan = async (req, res) => {
       return res.status(200).json({ success: true, hasScan: false, scan: null });
     }
 
-    const { uid, displayUid, scannedAt, source } = device.lastScannedCard;
+    const { uid, displayUid, scannedAt, source, adminConsumedAt, userConsumedAt } = device.lastScannedCard;
     const isRecent = scannedAt && (Date.now() - new Date(scannedAt).getTime() < 60000);
 
     if (!isRecent) {
       return res.status(200).json({ success: true, hasScan: false, scan: null });
     }
 
-    if (req.query.consume === 'true') {
-      const update = {};
-      update['lastScannedCard.uid'] = null;
-      update['lastScannedCard.displayUid'] = null;
-      update['lastScannedCard.scannedAt'] = null;
-      await Device.updateOne({ deviceId }, update);
+    const isFromAdmin = req.query.source === 'admin';
+
+    // Disallow cross-stealing: Admin polling will never be erased by User/Gate terminal polling
+    if (isFromAdmin) {
+      if (adminConsumedAt && new Date(adminConsumedAt).getTime() >= new Date(scannedAt).getTime()) {
+        return res.status(200).json({ success: true, hasScan: false, scan: null });
+      }
+      if (req.query.consume === 'true') {
+        await Device.updateOne({ deviceId }, { $set: { 'lastScannedCard.adminConsumedAt': new Date() } });
+      }
+    } else {
+      if (userConsumedAt && new Date(userConsumedAt).getTime() >= new Date(scannedAt).getTime()) {
+        return res.status(200).json({ success: true, hasScan: false, scan: null });
+      }
+      if (req.query.consume === 'true') {
+        await Device.updateOne({ deviceId }, { $set: { 'lastScannedCard.userConsumedAt': new Date() } });
+      }
     }
 
     return res.status(200).json({
@@ -458,7 +471,9 @@ const simulateScan = async (req, res) => {
           'lastScannedCard.uid': cleanUid,
           'lastScannedCard.displayUid': displayUid,
           'lastScannedCard.scannedAt': new Date(),
-          'lastScannedCard.source': 'simulation'
+          'lastScannedCard.source': 'simulation',
+          'lastScannedCard.adminConsumedAt': null,
+          'lastScannedCard.userConsumedAt': null
         }
       },
       { upsert: true }
