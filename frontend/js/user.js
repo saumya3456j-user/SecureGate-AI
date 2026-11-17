@@ -379,7 +379,7 @@ async function simulateActiveCardTap() {
     input.value = targetUid;
     input.style.borderColor = 'var(--accent-cyan)';
   }
-  showToast(`⚡ Card Tap simulated for: ${targetUid}`, 'info');
+  showToast(`⚡ Software test card simulated: ${targetUid}`, 'info');
   scanCard(targetUid);
 }
 
