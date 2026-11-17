@@ -111,6 +111,21 @@ let serialPort = null;
 let serialReader = null;
 let isReadingSerial = false;
 
+// Universal RFID UID extractor (matches delimited e.g. "82 0D EE 5C" or continuous "820DEE5C" from any sketch log)
+function extractCardUid(text) {
+  if (!text) return null;
+  // 1. Delimited 4 to 7 byte hex (spaces, colons, or dashes)
+  const delimited = text.match(/\b([0-9A-Fa-f]{2}(?:[\s:-][0-9A-Fa-f]{2}){3,6})\b/);
+  if (delimited) return delimited[1].replace(/[:-]/g, ' ').toUpperCase().trim();
+
+  // 2. Continuous 8 to 14 hex chars without spaces
+  const continuous = text.match(/\b([0-9A-Fa-f]{8}|[0-9A-Fa-f]{14})\b/);
+  if (continuous) {
+    return continuous[1].match(/.{2}/g).join(' ').toUpperCase();
+  }
+  return null;
+}
+
 async function connectEsp32UsbSerial() {
   if (!('serial' in navigator)) {
     showToast('Web Serial is supported in Chrome, Brave, and Edge. Please use a Chromium browser.', 'warn', 5000);
@@ -122,7 +137,18 @@ async function connectEsp32UsbSerial() {
   const statusText = document.getElementById('terminal-scan-status-text');
 
   try {
-    showToast('Select your ESP32 COM Port in the browser dialog...', 'info', 4000);
+    // Gracefully clean up any previous reader session
+    if (serialReader) {
+      try { await serialReader.cancel(); } catch (e) {}
+      serialReader = null;
+    }
+    if (serialPort) {
+      try { await serialPort.close(); } catch (e) {}
+      serialPort = null;
+    }
+    isReadingSerial = false;
+
+    showToast('Select "Silicon Labs CP210x" or your ESP32 COM port...', 'info', 4000);
 
     // Prompt user to select ESP32 COM port
     serialPort = await navigator.serial.requestPort();
@@ -137,11 +163,11 @@ async function connectEsp32UsbSerial() {
       statusText.innerHTML = '🟢 <strong>ESP32 USB Connected!</strong> Tap your card on the RC522 reader now.';
     }
 
-    showToast('🟢 ESP32 connected via USB! Close Arduino Serial Monitor so the browser can read it.', 'success', 7000);
+    showToast('🟢 ESP32 connected via USB! Tap your RFID card on the reader.', 'success', 6000);
     readSerialLoop();
   } catch (err) {
     if (err.name !== 'NotFoundError') {
-      showToast(`USB Serial notice: ${err.message}. (Ensure Arduino IDE Serial Monitor is closed)`, 'warn', 7000);
+      showToast(`USB Serial: ${err.message}. (Ensure Arduino IDE Serial Monitor is closed)`, 'warn', 7000);
     }
   }
 }
@@ -163,33 +189,28 @@ async function readSerialLoop() {
       if (value) {
         buffer += value;
         const lines = buffer.split('\n');
-        buffer = lines.pop(); // keep last incomplete chunk
+        buffer = lines.pop(); // keep last chunk
 
         for (const line of lines) {
-          const trimmed = line.trim();
-          console.log('[ESP32-USB-LOG]', trimmed);
+          const cleanLine = line.replace(/\r/g, '').trim();
+          console.log('[ESP32-USB-LOG]', cleanLine);
 
-          // Detect UID pattern: e.g. "RFID UID: 82 0D EE 5C" or "UID: 82 0D EE 5C" or raw 4/7-byte hex
-          const match = trimmed.match(/(?:RFID\s*UID|UID|Card\s*UID)[\s:]+([0-9A-Fa-f]{2}(?:[\s:-][0-9A-Fa-f]{2}){3,6})/i)
-                     || trimmed.match(/^([0-9A-Fa-f]{2}(?:[\s:-][0-9A-Fa-f]{2}){3,6})$/i);
-
-          if (match && match[1]) {
-            const detectedUid = match[1].replace(/[:-]/g, ' ').toUpperCase().trim();
+          const detectedUid = extractCardUid(cleanLine);
+          if (detectedUid) {
             console.log('[RFID-DETECTED-VIA-USB]', detectedUid);
+            applyScannedUid(detectedUid);
+            buffer = '';
+            break;
+          }
+        }
 
-            const input = document.getElementById('manual-uid-input');
-            if (input) {
-              input.value = detectedUid;
-              input.style.borderColor = 'var(--accent-cyan)';
-            }
-
-            const statusText = document.getElementById('terminal-scan-status-text');
-            if (statusText) {
-              statusText.innerHTML = `✅ <strong>Card Scanned via USB:</strong> ${detectedUid}! Identifying...`;
-            }
-
-            showToast(`Card Scanned via USB: ${detectedUid}!`, 'success');
-            scanCard(detectedUid);
+        // Also inspect buffer directly if no newline is received
+        if (buffer.length >= 8) {
+          const directUid = extractCardUid(buffer);
+          if (directUid) {
+            console.log('[RFID-DETECTED-IN-BUFFER]', directUid);
+            applyScannedUid(directUid);
+            buffer = '';
           }
         }
       }
@@ -199,6 +220,24 @@ async function readSerialLoop() {
   } finally {
     isReadingSerial = false;
   }
+}
+
+function applyScannedUid(detectedUid) {
+  const input = document.getElementById('manual-uid-input');
+  if (input) {
+    input.value = detectedUid;
+    input.style.borderColor = 'var(--accent-cyan)';
+    input.style.boxShadow = '0 0 20px rgba(0, 240, 255, 0.4)';
+    setTimeout(() => { input.style.boxShadow = ''; }, 2000);
+  }
+
+  const statusText = document.getElementById('terminal-scan-status-text');
+  if (statusText) {
+    statusText.innerHTML = `✅ <strong>Card Scanned:</strong> ${detectedUid}! Verifying...`;
+  }
+
+  showToast(`✅ Card Detected: ${detectedUid}! Identifying...`, 'success', 4000);
+  scanCard(detectedUid);
 }
 
 // Dedicated Manual / Web "Scan RFID Card" Trigger

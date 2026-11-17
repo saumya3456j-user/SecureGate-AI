@@ -1007,7 +1007,20 @@ async function sendQuickTestEmail() {
 
 // Direct USB Web Serial Auto-Fill for Admin Form
 let adminSerialPort = null;
+let adminSerialReader = null;
 let isAdminReadingSerial = false;
+
+function extractCardUid(text) {
+  if (!text) return null;
+  const delimited = text.match(/\b([0-9A-Fa-f]{2}(?:[\s:-][0-9A-Fa-f]{2}){3,6})\b/);
+  if (delimited) return delimited[1].replace(/[:-]/g, ' ').toUpperCase().trim();
+
+  const continuous = text.match(/\b([0-9A-Fa-f]{8}|[0-9A-Fa-f]{14})\b/);
+  if (continuous) {
+    return continuous[1].match(/.{2}/g).join(' ').toUpperCase();
+  }
+  return null;
+}
 
 async function connectEsp32UsbSerialForInput(targetInputId) {
   if (!('serial' in navigator)) {
@@ -1016,7 +1029,17 @@ async function connectEsp32UsbSerialForInput(targetInputId) {
   }
 
   try {
-    showToast('Select your ESP32 COM Port in the browser dialog...', 'info', 4000);
+    if (adminSerialReader) {
+      try { await adminSerialReader.cancel(); } catch (e) {}
+      adminSerialReader = null;
+    }
+    if (adminSerialPort) {
+      try { await adminSerialPort.close(); } catch (e) {}
+      adminSerialPort = null;
+    }
+    isAdminReadingSerial = false;
+
+    showToast('Select "Silicon Labs CP210x" in the browser dialog...', 'info', 4000);
     adminSerialPort = await navigator.serial.requestPort();
     await adminSerialPort.open({ baudRate: 115200 });
     showToast('🟢 USB Reader Connected! Tap card on RC522 to auto-fill UID.', 'success', 6000);
@@ -1037,6 +1060,7 @@ async function readAdminSerialLoop(targetInputId) {
     const textDecoder = new TextDecoderStream();
     const streamClosed = adminSerialPort.readable.pipeTo(textDecoder.writable);
     const reader = textDecoder.readable.getReader();
+    adminSerialReader = reader;
 
     while (true) {
       const { value, done } = await reader.read();
@@ -1047,11 +1071,10 @@ async function readAdminSerialLoop(targetInputId) {
         buffer = lines.pop();
 
         for (const line of lines) {
-          const match = line.trim().match(/(?:RFID\s*UID|UID|Card\s*UID)[\s:]+([0-9A-Fa-f]{2}(?:[\s:-][0-9A-Fa-f]{2}){3,6})/i)
-                     || line.trim().match(/^([0-9A-Fa-f]{2}(?:[\s:-][0-9A-Fa-f]{2}){3,6})$/i);
+          const cleanLine = line.replace(/\r/g, '').trim();
+          const detectedUid = extractCardUid(cleanLine);
 
-          if (match && match[1]) {
-            const detectedUid = match[1].replace(/[:-]/g, ' ').toUpperCase().trim();
+          if (detectedUid) {
             const input = document.getElementById(targetInputId);
             if (input) {
               input.value = detectedUid;
@@ -1060,6 +1083,21 @@ async function readAdminSerialLoop(targetInputId) {
               setTimeout(() => { input.style.boxShadow = ''; }, 2000);
             }
             showToast(`Card UID Scanned via USB: ${detectedUid}!`, 'success');
+            buffer = '';
+            break;
+          }
+        }
+
+        if (buffer.length >= 8) {
+          const directUid = extractCardUid(buffer);
+          if (directUid) {
+            const input = document.getElementById(targetInputId);
+            if (input) {
+              input.value = directUid;
+              input.style.borderColor = 'var(--accent-cyan)';
+            }
+            showToast(`Card UID Scanned via USB: ${directUid}!`, 'success');
+            buffer = '';
           }
         }
       }
