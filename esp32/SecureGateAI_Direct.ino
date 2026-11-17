@@ -32,16 +32,17 @@
 // ========== CONFIGURATION ==========
 
 // 1. Wi-Fi Configuration
-const char* WIFI_SSID     = "VIT TPO";
-const char* WIFI_PASSWORD = "10104007";
+const char* WIFI_SSID     = "soumya";
+const char* WIFI_PASSWORD = "123456789";
+const char* WIFI_SSID_2   = "OnePlus 10R 5G";
+const char* WIFI_PASS_2   = "123456789";
 
 // Fallback Access Point if Wi-Fi cannot be reached
 const char* AP_SSID       = "SecureGate-AP";
 const char* AP_PASSWORD   = "securegate123";
 
-// 2. SecureGate AI Backend Server URL
-// Replace with your laptop's Wi-Fi IP address if it changes
-const char* BACKEND_SERVER = "http://10.109.175.60:5000";
+// 2. SecureGate AI Backend Server URL (Laptop IP on personal network)
+const char* BACKEND_SERVER = "http://10.58.165.201:5000";
 const char* DEVICE_ID      = "ESP32_SECUREGATE_01";
 
 // 3. Hardware Pins
@@ -335,16 +336,28 @@ void checkPendingUnlockCommand() {
 // ========== WIFI CONNECTION ==========
 void connectWiFi() {
   WiFi.mode(WIFI_STA);
-  WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
-
   Serial.print("Connecting to Wi-Fi network '");
   Serial.print(WIFI_SSID);
   Serial.print("'");
 
+  WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
   unsigned long start = millis();
-  while (WiFi.status() != WL_CONNECTED && millis() - start < 9000) {
+  while (WiFi.status() != WL_CONNECTED && millis() - start < 6000) {
     Serial.print(".");
     delay(500);
+  }
+
+  // Fallback to secondary SSID (e.g. OnePlus 10R 5G hotspot) if first attempt hasn't connected
+  if (WiFi.status() != WL_CONNECTED && String(WIFI_SSID_2).length() > 0) {
+    Serial.print("\nTrying secondary network '");
+    Serial.print(WIFI_SSID_2);
+    Serial.print("'");
+    WiFi.begin(WIFI_SSID_2, WIFI_PASS_2);
+    start = millis();
+    while (WiFi.status() != WL_CONNECTED && millis() - start < 6000) {
+      Serial.print(".");
+      delay(500);
+    }
   }
 
   if (WiFi.status() == WL_CONNECTED) {
