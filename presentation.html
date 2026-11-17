@@ -1,0 +1,889 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SecureGate AI — Complete Project Presentation Deck</title>
+  <style>
+    :root {
+      --bg: #0b0f19;
+      --card-bg: rgba(19, 27, 46, 0.85);
+      --accent-cyan: #00f0ff;
+      --accent-green: #10b981;
+      --accent-amber: #f59e0b;
+      --accent-purple: #8b5cf6;
+      --text: #f8fafc;
+      --text-muted: #94a3b8;
+      --border: rgba(0, 240, 255, 0.25);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background-color: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow-x: hidden;
+    }
+
+    /* Presentation Header & Progress Bar */
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 14px 28px;
+      background: rgba(11, 15, 25, 0.95);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(10px);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 800;
+      font-size: 1.25rem;
+      letter-spacing: 1px;
+      color: var(--accent-cyan);
+    }
+
+    .slide-counter {
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      font-family: monospace;
+    }
+
+    .progress-bar-container {
+      width: 100%;
+      height: 4px;
+      background: rgba(255, 255, 255, 0.08);
+      position: relative;
+    }
+
+    .progress-bar {
+      height: 100%;
+      background: linear-gradient(90deg, var(--accent-cyan), var(--accent-green));
+      width: 0%;
+      transition: width 0.3s ease;
+    }
+
+    /* Main Slide Stage */
+    main {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+
+    .slide {
+      display: none;
+      width: 100%;
+      max-width: 1200px;
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 40px;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6), 0 0 30px rgba(0, 240, 255, 0.05);
+      animation: fadeIn 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .slide.active { display: block; }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(12px) scale(0.99); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    .slide-tag {
+      display: inline-block;
+      padding: 4px 12px;
+      background: rgba(0, 240, 255, 0.12);
+      border: 1px solid var(--accent-cyan);
+      border-radius: 20px;
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: var(--accent-cyan);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 12px;
+    }
+
+    h1.slide-title {
+      font-size: 2.2rem;
+      color: var(--text);
+      font-weight: 800;
+      margin-bottom: 8px;
+      line-height: 1.2;
+    }
+
+    h2.slide-subtitle {
+      font-size: 1.15rem;
+      color: var(--text-muted);
+      font-weight: 400;
+      margin-bottom: 28px;
+    }
+
+    /* Grid Layouts */
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+    .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; }
+    .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px; }
+
+    @media (max-width: 900px) {
+      .grid-2, .grid-3, .grid-4 { grid-template-columns: 1fr; }
+    }
+
+    .card {
+      background: rgba(11, 15, 25, 0.7);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 12px;
+      padding: 22px;
+      transition: all 0.2s ease;
+    }
+
+    .card:hover {
+      border-color: var(--accent-cyan);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(0, 240, 255, 0.1);
+    }
+
+    .card-title {
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: var(--accent-cyan);
+      margin-bottom: 14px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    ul.card-list {
+      list-style: none;
+    }
+
+    ul.card-list li {
+      font-size: 0.95rem;
+      color: #cbd5e1;
+      line-height: 1.55;
+      margin-bottom: 10px;
+      position: relative;
+      padding-left: 20px;
+    }
+
+    ul.card-list li::before {
+      content: "▹";
+      position: absolute;
+      left: 0;
+      color: var(--accent-cyan);
+      font-weight: bold;
+    }
+
+    .badge-pill {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 6px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      margin-right: 6px;
+    }
+    .badge-cyan { background: rgba(0, 240, 255, 0.15); color: var(--accent-cyan); border: 1px solid var(--accent-cyan); }
+    .badge-green { background: rgba(16, 185, 129, 0.15); color: var(--accent-green); border: 1px solid var(--accent-green); }
+    .badge-amber { background: rgba(245, 158, 11, 0.15); color: var(--accent-amber); border: 1px solid var(--accent-amber); }
+
+    /* Controls Bar */
+    footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 16px 28px;
+      background: rgba(11, 15, 25, 0.95);
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+      position: sticky;
+      bottom: 0;
+      z-index: 100;
+    }
+
+    .btn {
+      background: transparent;
+      border: 1px solid var(--accent-cyan);
+      color: var(--accent-cyan);
+      font-weight: 700;
+      padding: 10px 22px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.95rem;
+      transition: all 0.2s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      text-decoration: none;
+    }
+
+    .btn:hover {
+      background: var(--accent-cyan);
+      color: #000;
+      box-shadow: 0 0 15px rgba(0, 240, 255, 0.4);
+    }
+
+    .btn-solid {
+      background: var(--accent-cyan);
+      color: #000;
+    }
+
+    .btn-solid:hover {
+      background: #38bdf8;
+    }
+
+    .nav-group {
+      display: flex;
+      gap: 12px;
+    }
+
+    .keyboard-hint {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+
+    kbd {
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 4px;
+      padding: 2px 6px;
+      font-family: monospace;
+      font-size: 0.8rem;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="brand">
+      <span>🛡️</span>
+      <span>SECUREGATE AI</span>
+    </div>
+    <div class="slide-counter" id="counter">SLIDE 1 / 14</div>
+    <div class="nav-group">
+      <button class="btn" onclick="toggleFullScreen()">⛶ Fullscreen</button>
+    </div>
+  </header>
+
+  <div class="progress-bar-container">
+    <div class="progress-bar" id="progressBar"></div>
+  </div>
+
+  <main>
+
+    <!-- SLIDE 1 -->
+    <div class="slide active">
+      <span class="slide-tag">PROJECT MASTER DECK</span>
+      <h1 class="slide-title" style="font-size:3.2rem; color:var(--accent-cyan);">SecureGate AI</h1>
+      <h2 class="slide-subtitle">Intelligent Role-Based RFID &amp; Dual-Layer Access Control System</h2>
+      
+      <div class="card" style="margin-top: 20px; border-color: rgba(0,240,255,0.4); background: rgba(0,240,255,0.03);">
+        <p style="font-size: 1.15rem; line-height: 1.7; color: #e2e8f0;">
+          A next-generation physical security platform combining <strong>IoT Edge Microcontrollers (ESP32)</strong>, 
+          <strong>13.56 MHz RFID Sensor Interfaces</strong>, <strong>Cryptographic 2FA OTP Delivery (Email &amp; SMS)</strong>, 
+          and a <strong>Cloud Management Console (Node.js, Express, MongoDB Atlas, Render)</strong>.
+        </p>
+      </div>
+
+      <div class="grid-3" style="margin-top: 24px;">
+        <div class="card">
+          <div class="card-title">⚡ IoT Edge Core</div>
+          <ul class="card-list">
+            <li>ESP32 dual-core 240MHz SoC</li>
+            <li>MFRC522 High-Frequency SPI reader</li>
+            <li>SG90 50Hz PWM Servo Actuator</li>
+            <li>Dual-network hotspot auto-failover</li>
+          </ul>
+        </div>
+        <div class="card">
+          <div class="card-title">🔐 Dual-Layer Security</div>
+          <ul class="card-list">
+            <li>Zero Trust access architecture</li>
+            <li>Salted SHA-256 hashed 6-digit OTP</li>
+            <li>Gmail SMTP &amp; Twilio carrier delivery</li>
+            <li>Single-use ephemeral session tokens</li>
+          </ul>
+        </div>
+        <div class="card">
+          <div class="card-title">🌐 Cloud Platform</div>
+          <ul class="card-list">
+            <li>Hosted on Render Web Services</li>
+            <li>Geo-redundant MongoDB Atlas cluster</li>
+            <li>Host Dashboard &amp; Visitor approval queue</li>
+            <li>Real-time telemetry and audit trails</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 2 -->
+    <div class="slide">
+      <span class="slide-tag">BACKGROUND &amp; MOTIVATION</span>
+      <h1 class="slide-title">The Flaws in Legacy RFID Systems</h1>
+      <h2 class="slide-subtitle">Why traditional turnstiles and keycards fail in modern security environments</h2>
+      
+      <div class="grid-3">
+        <div class="card">
+          <div class="card-title">1. Card Cloning Vulnerability</div>
+          <ul class="card-list">
+            <li>Standard 13.56MHz and 125kHz cards broadcast unencrypted hardware UIDs.</li>
+            <li>Handheld RFID copiers costing $10 can duplicate employee badges in under 3 seconds.</li>
+            <li>Physical badges can be skimmed through wallets in crowded hallways or cafeterias.</li>
+            <li>Possession of plastic card does NOT equal identity verification.</li>
+          </ul>
+        </div>
+
+        <div class="card">
+          <div class="card-title">2. Lost or Stolen Badges</div>
+          <ul class="card-list">
+            <li>If an authorized member drops their badge, anyone finding it gains physical perimeter entry.</li>
+            <li>There is zero secondary prompt at the door to verify the human tapping the card.</li>
+            <li>Revocation delays create critical security windows where unauthorized entry is trivial.</li>
+            <li>Institutions suffer billions in inventory and intellectual property theft annually.</li>
+          </ul>
+        </div>
+
+        <div class="card">
+          <div class="card-title">3. Siloed Offline Logs</div>
+          <ul class="card-list">
+            <li>Traditional controllers log data on local micro-SD cards with zero cloud connectivity.</li>
+            <li>Security officers have no real-time visibility into unauthorized tap patterns.</li>
+            <li>No automated alert is ever sent to the genuine cardholder when their card is tapped.</li>
+            <li>Visitor logging still relies on vulnerable paper guestbooks and manual stamps.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 3 -->
+    <div class="slide">
+      <span class="slide-tag">CORE INNOVATION</span>
+      <h1 class="slide-title">The SecureGate AI Dual-Layer Defense</h1>
+      <h2 class="slide-subtitle">Combining physical possession with cryptographic real-time ownership proof</h2>
+
+      <div class="grid-2">
+        <div class="card" style="border-left: 4px solid var(--accent-cyan);">
+          <div class="card-title">🛡️ Layer 1: Hardware RFID Identification</div>
+          <ul class="card-list">
+            <li><strong>Physical Proximity Check:</strong> Cardholder taps 13.56 MHz RFID badge (MIFARE Classic 1K / ISO 14443A).</li>
+            <li><strong>High-Speed SPI Interfacing:</strong> ESP32 captures the unique 4-byte hardware serial number (UID).</li>
+            <li><strong>Audio-Visual Feedback:</strong> Instant active buzzer pulse and dual-LED feedback acknowledge card presence.</li>
+            <li><strong>Cloud Lookup:</strong> Transmits UID via REST API to query enrolled MongoDB user profiles.</li>
+          </ul>
+        </div>
+
+        <div class="card" style="border-left: 4px solid var(--accent-green);">
+          <div class="card-title">🔐 Layer 2: Cryptographic 2FA OTP Protocol</div>
+          <ul class="card-list">
+            <li><strong>Zero Trust Enforcement:</strong> Card possession alone NEVER releases the locking mechanism.</li>
+            <li><strong>Dynamic 6-Digit Code:</strong> Cryptographically generated integer with 16-byte random salt and SHA-256 hash.</li>
+            <li><strong>Multi-Channel Dispatch:</strong> Sent immediately to cardholder's private Gmail and mobile SMS.</li>
+            <li><strong>Anti-Replay Invalidation:</strong> 5-minute strict TTL and single-use invalidation upon submission.</li>
+            <li><strong>Fail-Secure Actuation:</strong> SG90 servo unlocks to 90° for exactly 3 seconds only after OTP passes.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 4 -->
+    <div class="slide">
+      <span class="slide-tag">SYSTEM ARCHITECTURE</span>
+      <h1 class="slide-title">4-Tier Distributed System Architecture</h1>
+      <h2 class="slide-subtitle">End-to-end data pipeline from physical edge sensor to cloud cluster</h2>
+
+      <div class="grid-4">
+        <div class="card">
+          <div class="card-title">1. Edge Layer</div>
+          <span class="badge-pill badge-cyan">ESP32 IoT</span>
+          <ul class="card-list" style="margin-top:10px;">
+            <li>ESP32 240MHz SoC</li>
+            <li>MFRC522 SPI Reader</li>
+            <li>SG90 Servo (PWM)</li>
+            <li>Buzzer &amp; Status LEDs</li>
+            <li>Dual-SSID Wi-Fi</li>
+            <li>Web Serial Backup</li>
+          </ul>
+        </div>
+
+        <div class="card">
+          <div class="card-title">2. API Gateway</div>
+          <span class="badge-pill badge-green">Node / Express</span>
+          <ul class="card-list" style="margin-top:10px;">
+            <li>RESTful Endpoints</li>
+            <li>JWT Authorization</li>
+            <li>RBAC (6 Roles)</li>
+            <li>Rate Limiting Engine</li>
+            <li>Command Queue</li>
+            <li>Security Audit Log</li>
+          </ul>
+        </div>
+
+        <div class="card">
+          <div class="card-title">3. Cloud DB</div>
+          <span class="badge-pill badge-amber">MongoDB Atlas</span>
+          <ul class="card-list" style="margin-top:10px;">
+            <li>Users &amp; Roles Collection</li>
+            <li>Ephemeral OTP Sessions</li>
+            <li>Immutable Audit Trail</li>
+            <li>Visitor Pass Queue</li>
+            <li>Device Telemetry</li>
+            <li>Resilient Retries</li>
+          </ul>
+        </div>
+
+        <div class="card">
+          <div class="card-title">4. Web Apps</div>
+          <span class="badge-pill badge-cyan">Cyber UI</span>
+          <ul class="card-list" style="margin-top:10px;">
+            <li>`admin.html` (Host)</li>
+            <li>`user.html` (Gate)</li>
+            <li>`visitor.html` (Passes)</li>
+            <li>`verify-otp.html` (2FA)</li>
+            <li>Responsive Layouts</li>
+            <li>Real-Time Websockets</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 5 -->
+    <div class="slide">
+      <span class="slide-tag">HARDWARE ENGINEERING</span>
+      <h1 class="slide-title">Hardware Schematics &amp; Pinout Configuration</h1>
+      <h2 class="slide-subtitle">Precision wiring connecting ESP32 DevKit v1 with peripheral sensors and actuators</h2>
+
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-title">MFRC522 RFID SPI Wiring Table</div>
+          <ul class="card-list">
+            <li><span class="badge-pill badge-cyan">SDA (SS)</span> ➔ <strong>GPIO 5</strong> (Chip Select / Slave Select)</li>
+            <li><span class="badge-pill badge-cyan">SCK</span> ➔ <strong>GPIO 18</strong> (SPI Serial Clock)</li>
+            <li><span class="badge-pill badge-cyan">MOSI</span> ➔ <strong>GPIO 23</strong> (Master Out Slave In)</li>
+            <li><span class="badge-pill badge-cyan">MISO</span> ➔ <strong>GPIO 19</strong> (Master In Slave Out)</li>
+            <li><span class="badge-pill badge-cyan">RST</span> ➔ <strong>GPIO 22</strong> (Hardware Reset Line)</li>
+            <li><span class="badge-pill badge-cyan">VCC &amp; GND</span> ➔ <strong>3.3V Pin &amp; Ground Rail</strong> (Strict 3.3V logic)</li>
+          </ul>
+        </div>
+
+        <div class="card">
+          <div class="card-title">Actuator &amp; Telemetry Peripheral Pinouts</div>
+          <ul class="card-list">
+            <li><span class="badge-pill badge-green">SG90 Servo</span> ➔ <strong>GPIO 13</strong> (50Hz PWM Signal, 0° to 90° throw)</li>
+            <li><span class="badge-pill badge-green">Green LED</span> ➔ <strong>GPIO 2</strong> (Active HIGH: Access Granted indication)</li>
+            <li><span class="badge-pill badge-amber">Red LED</span> ➔ <strong>GPIO 4</strong> (Active HIGH: Access Denied / Locked)</li>
+            <li><span class="badge-pill badge-cyan">Piezo Buzzer</span> ➔ <strong>GPIO 15</strong> (Tone frequencies for alerts)</li>
+            <li><span class="badge-pill badge-amber">Servo Power</span> ➔ <strong>External 5V / VIN Rail</strong> (Clean inductive decoupling)</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 6 -->
+    <div class="slide">
+      <span class="slide-tag">CRYPTOGRAPHIC PROTOCOL</span>
+      <h1 class="slide-title">Dual-Layer OTP Verification Lifecycle</h1>
+      <h2 class="slide-subtitle">Step-by-step cryptographic sequence preventing replay attacks and brute forcing</h2>
+
+      <div class="grid-3">
+        <div class="card">
+          <div class="card-title">Step 1: Scan &amp; Ingestion</div>
+          <ul class="card-list">
+            <li>Card touches RC522 antenna.</li>
+            <li>ESP32 sends `POST /api/device/rfid-event` with hardware UID.</li>
+            <li>Server verifies card registration in MongoDB.</li>
+            <li>Unregistered cards immediately rejected and logged.</li>
+          </ul>
+        </div>
+
+        <div class="card">
+          <div class="card-title">Step 2: Cryptographic Dispatch</div>
+          <ul class="card-list">
+            <li>Server generates random 6-digit code.</li>
+            <li>Generates 16-byte random cryptographic salt.</li>
+            <li>Stores `SHA-256(code + salt)` in MongoDB.</li>
+            <li>Simultaneously dispatches via Gmail SMTP &amp; Twilio SMS.</li>
+          </ul>
+        </div>
+
+        <div class="card">
+          <div class="card-title">Step 3: Verification &amp; Pulse</div>
+          <ul class="card-list">
+            <li>User enters 6 digits on Gate terminal.</li>
+            <li>Server validates hash; marks session used.</li>
+            <li>Enqueues one-time `UNLOCK` command.</li>
+            <li>ESP32 polls, rotates servo 90°, and auto-relocks after 3s.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 7 -->
+    <div class="slide">
+      <span class="slide-tag">EDGE FIRMWARE</span>
+      <h1 class="slide-title">ESP32 Firmware Architecture &amp; Reliability</h1>
+      <h2 class="slide-subtitle">Zero-downtime engineering designed for spotty network environments</h2>
+
+      <div class="grid-3">
+        <div class="card">
+          <div class="card-title">Dual Wi-Fi Auto-Failover</div>
+          <ul class="card-list">
+            <li>Firmware stores primary campus Wi-Fi and secondary mobile hotspot credentials.</li>
+            <li>If primary signal drops, shifts to fallback hotspot within 8 seconds automatically.</li>
+            <li>Broadcasts fallback SoftAP setup network if both external connections drop.</li>
+          </ul>
+        </div>
+
+        <div class="card">
+          <div class="card-title">Non-Blocking Polling Engine</div>
+          <ul class="card-list">
+            <li>Engineered 100% using non-blocking `millis()` state timers.</li>
+            <li>Zero blocking `delay()` calls: ESP32 core never hangs or triggers watchdog resets.</li>
+            <li>Independent command polling every 1.5 seconds keeps cloud commands synchronized.</li>
+          </ul>
+        </div>
+
+        <div class="card">
+          <div class="card-title">Offline Emergency Whitelist</div>
+          <ul class="card-list">
+            <li>Integrated flash EEPROM storage caches emergency master bypass cards.</li>
+            <li>If cloud network is entirely down, security personnel can still open the gate offline.</li>
+            <li>Queues offline logs and flushes them to cloud upon internet restoration.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 8 -->
+    <div class="slide">
+      <span class="slide-tag">USER EXPERIENCE</span>
+      <h1 class="slide-title">Client Web Applications &amp; Terminals</h1>
+      <h2 class="slide-subtitle">Modern, high-contrast cyber interfaces designed for speed and clarity</h2>
+
+      <div class="grid-3">
+        <div class="card">
+          <div class="card-title">Entry Gate (`user.html`)</div>
+          <ul class="card-list">
+            <li>Primary terminal displayed at turnstile.</li>
+            <li>Automatic real-time ESP32 Wi-Fi tap listener.</li>
+            <li>Direct Web Serial USB hardware connection.</li>
+            <li>Visual interactive cards for fast testing.</li>
+            <li>Instant access status and OTP verification modal.</li>
+          </ul>
+        </div>
+
+        <div class="card">
+          <div class="card-title">Visitor Pass (`visitor.html`)</div>
+          <ul class="card-list">
+            <li>Self-service visitor registration portal.</li>
+            <li>Submit Name, Contact, Host, and Reason.</li>
+            <li>Submits to Host Approval Queue in real-time.</li>
+            <li>Approved visitors receive dynamic QR &amp; OTP.</li>
+            <li>Complete visit logging and audit trails.</li>
+          </ul>
+        </div>
+
+        <div class="card">
+          <div class="card-title">2FA Portal (`verify-otp.html`)</div>
+          <ul class="card-list">
+            <li>Standalone two-factor verification screen.</li>
+            <li>Segmented 6-digit auto-advancing boxes.</li>
+            <li>5-minute active countdown timer.</li>
+            <li>Rate-limited attempt defense (Max 3).</li>
+            <li>Animated mechanical servo unlock pulse.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 9 -->
+    <div class="slide">
+      <span class="slide-tag">ADMINISTRATION</span>
+      <h1 class="slide-title">Host &amp; Administrator Security Console</h1>
+      <h2 class="slide-subtitle">Centralized governance portal for security teams and department hosts (`admin.html`)</h2>
+
+      <div class="grid-3">
+        <div class="card">
+          <div class="card-title">Role-Based Access Control</div>
+          <ul class="card-list">
+            <li>6 Granular User Roles: Admin, Host, Faculty, Student, Staff, Security Officer.</li>
+            <li>Full User Directory CRUD with search &amp; filter.</li>
+            <li>1-Click Account Deactivation for lost cards.</li>
+            <li>Seamless card re-assignment without conflicts.</li>
+          </ul>
+        </div>
+
+        <div class="card">
+          <div class="card-title">Multi-Input RFID Enrollment</div>
+          <ul class="card-list">
+            <li><strong>📡 Wi-Fi Scan:</strong> Tap card on ESP32 anywhere on the premises.</li>
+            <li><strong>🔌 USB Reader:</strong> Direct Web Serial browser read.</li>
+            <li><strong>⚡ Quick Fill:</strong> 1-click test fill for registered card (`82 0D EE 5C`).</li>
+            <li>Available in both Add and Edit modals.</li>
+          </ul>
+        </div>
+
+        <div class="card">
+          <div class="card-title">Overrides &amp; Live Telemetry</div>
+          <ul class="card-list">
+            <li><strong>Visitor Queue:</strong> 1-click Approve / Reject.</li>
+            <li><strong>Remote Unlock:</strong> Trigger emergency pulse.</li>
+            <li><strong>Audit Trail:</strong> Filterable entry/denial logs.</li>
+            <li><strong>Device Health:</strong> Live Wi-Fi SSID, IP, heap memory, and uptime status.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 10 -->
+    <div class="slide">
+      <span class="slide-tag">ADVANCED ENGINEERING</span>
+      <h1 class="slide-title">Concurrency Isolation &amp; Anti-Spam Architecture</h1>
+      <h2 class="slide-subtitle">Solving real-world browser race conditions and sensor debounce challenges</h2>
+
+      <div class="grid-2">
+        <div class="card" style="border-left: 4px solid var(--accent-cyan);">
+          <div class="card-title">Independent Scan Channels (Admin vs Gate)</div>
+          <ul class="card-list">
+            <li><strong>Identified Edge Case:</strong> Background `user.html` tab polling the API consumed and wiped scans before `admin.html` could auto-fill the Edit User form.</li>
+            <li><strong>Architectural Fix:</strong> Upgraded Device schema to track separate consumption pointers: `adminConsumedAt` vs `userConsumedAt`.</li>
+            <li><strong>Result:</strong> Gate polling NEVER wipes or steals an RFID card scan intended for the Host Dashboard enrollment modal.</li>
+          </ul>
+        </div>
+
+        <div class="card" style="border-left: 4px solid var(--accent-green);">
+          <div class="card-title">Tab Visibility Sleep &amp; Debounce Protection</div>
+          <ul class="card-list">
+            <li><strong>Tab Visibility Engine:</strong> `user.html` utilizes `document.hidden` to pause background polling when the user switches to other tabs.</li>
+            <li><strong>Prevents Ghost Triggers:</strong> Completely eliminates unwanted OTP email dispatch while editing users in Host Dashboard.</li>
+            <li><strong>Hardware Debounce:</strong> 2000ms RC522 firmware debounce + 6-second frontend duplicate cooldown eliminates sensor jitter.</li>
+            <li><strong>Toast Clamping:</strong> Visible notifications capped at 3 to prevent UI banner stacking.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 11 -->
+    <div class="slide">
+      <span class="slide-tag">DEPLOYMENT</span>
+      <h1 class="slide-title">Cloud Deployment &amp; Database Scalability</h1>
+      <h2 class="slide-subtitle">Continuous integration and deployment workflow for production readiness</h2>
+
+      <div class="grid-3">
+        <div class="card">
+          <div class="card-title">Render Cloud Hosting</div>
+          <ul class="card-list">
+            <li>Hosted as a Web Service on Render (`dashboard.render.com`).</li>
+            <li>Linked directly to GitHub repository (`saumya3456j-user/SecureGate-AI`).</li>
+            <li>Automated deployments triggered on every `git push origin main`.</li>
+            <li>Automatic HTTPS termination and zero-config SSL certificates.</li>
+          </ul>
+        </div>
+
+        <div class="card">
+          <div class="card-title">MongoDB Atlas Cloud</div>
+          <ul class="card-list">
+            <li>Managed multi-tenant MongoDB cluster in the cloud.</li>
+            <li>Resilient Mongoose connection design: never crashes the Node container if cloud DB is slow to connect.</li>
+            <li>Background reconnection loop retries automatically every 15 seconds.</li>
+          </ul>
+        </div>
+
+        <div class="card">
+          <div class="card-title">Environment Security</div>
+          <ul class="card-list">
+            <li>Strict secret segregation via `.env` configuration.</li>
+            <li>Bcrypt password hashing with work factor of 10.</li>
+            <li>JWT tokens with strict expiration dates for admin sessions.</li>
+            <li>Gmail SMTP App Passwords and Twilio API keys.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 12 -->
+    <div class="slide">
+      <span class="slide-tag">VERIFICATION</span>
+      <h1 class="slide-title">Automated Testing &amp; Hardware Verification</h1>
+      <h2 class="slide-subtitle">Comprehensive verification across unit, integration, and physical hardware layers</h2>
+
+      <div class="grid-2">
+        <div class="card" style="border-left: 4px solid var(--accent-green);">
+          <div class="card-title">21 / 21 Automated Tests Passing (100%)</div>
+          <ul class="card-list">
+            <li><span class="badge-pill badge-green">PASS</span> System Health Check &amp; Database Ping</li>
+            <li><span class="badge-pill badge-green">PASS</span> Admin Login &amp; JWT Token Generation</li>
+            <li><span class="badge-pill badge-green">PASS</span> User Registration &amp; Duplicate RFID Prevention</li>
+            <li><span class="badge-pill badge-green">PASS</span> Hardware Scan Simulation &amp; Admin Auto-Fill</li>
+            <li><span class="badge-pill badge-green">PASS</span> Dual Email/SMS OTP Dispatch Pipeline</li>
+            <li><span class="badge-pill badge-green">PASS</span> Invalid OTP Rejection &amp; Attempt Rate Limiting</li>
+            <li><span class="badge-pill badge-green">PASS</span> Valid OTP Verification &amp; Servo Unlock Signal</li>
+            <li><span class="badge-pill badge-green">PASS</span> Anti-Replay Token Invalidation Enforcement</li>
+            <li><span class="badge-pill badge-green">PASS</span> ESP32 Command Queue Polling &amp; Acknowledgment</li>
+          </ul>
+        </div>
+
+        <div class="card" style="border-left: 4px solid var(--accent-cyan);">
+          <div class="card-title">Physical Hardware Benchmark Metrics</div>
+          <ul class="card-list">
+            <li><strong>Verified Physical Card:</strong> UID `82 0D EE 5C` (MIFARE Classic 1K).</li>
+            <li><strong>Antenna Read Range:</strong> ~3.5 cm from RC522 coil surface.</li>
+            <li><strong>Tap-to-Email Latency:</strong> &lt; 1.4 seconds from physical card touch to Gmail delivery.</li>
+            <li><strong>Mechanical Reliability:</strong> 100% actuation consistency (90° throw, 3000ms duration).</li>
+            <li><strong>Wi-Fi Recovery:</strong> Re-establishes cloud heartbeat within 4.2 seconds after hotspot reconnection.</li>
+            <li><strong>Memory Profile:</strong> Zero memory leaks observed; ESP32 free heap remains steady at &gt;190KB.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 13 -->
+    <div class="slide">
+      <span class="slide-tag">QUICKSTART GUIDE</span>
+      <h1 class="slide-title">Team Setup: Running the Project in 3 Minutes</h1>
+      <h2 class="slide-subtitle">Simple instructions for team members to run and demo the full system</h2>
+
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-title">💻 Backend &amp; Web Console Setup</div>
+          <ul class="card-list">
+            <li><strong>1. Extract ZIP Archive:</strong> Unzip `SecureGate-AI_Complete_Project.zip`.</li>
+            <li><strong>2. Install Dependencies:</strong> Open terminal in folder and run `npm install`.</li>
+            <li><strong>3. Setup Environment:</strong> Copy `.env.example` to `backend/.env`.</li>
+            <li><strong>4. Launch Application:</strong> Run `npm start` (or `node backend/server.js`).</li>
+            <li><strong>5. Open Browser:</strong>
+              <br>• Gate Terminal: <a href="http://localhost:5000/user.html" target="_blank" style="color:var(--accent-cyan)">http://localhost:5000/user.html</a>
+              <br>• Admin Console: <a href="http://localhost:5000/admin.html" target="_blank" style="color:var(--accent-cyan)">http://localhost:5000/admin.html</a>
+              <br>• Visitor Portal: <a href="http://localhost:5000/visitor.html" target="_blank" style="color:var(--accent-cyan)">http://localhost:5000/visitor.html</a>
+            </li>
+          </ul>
+        </div>
+
+        <div class="card">
+          <div class="card-title">🔌 ESP32 Hardware Flashing Guide</div>
+          <ul class="card-list">
+            <li><strong>1. Install Libraries:</strong> In Arduino IDE, install <code>MFRC522</code> and <code>ESP32Servo</code>.</li>
+            <li><strong>2. Open Sketch:</strong> Open <code>esp32/SecureGateAI_Direct.ino</code>.</li>
+            <li><strong>3. Network Credentials:</strong> Enter your Wi-Fi SSID and Password in lines 35-36.</li>
+            <li><strong>4. Backend Server:</strong> Set `BACKEND_SERVER` to your laptop IP or Render URL.</li>
+            <li><strong>5. Board Selection:</strong> Choose <em>ESP32 Dev Module</em> and Silicon Labs COM port.</li>
+            <li><strong>6. Flash &amp; Verify:</strong> Click Upload. Tap your card to see live scans!</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 14 -->
+    <div class="slide">
+      <span class="slide-tag">FUTURE VISION</span>
+      <h1 class="slide-title">Conclusion &amp; Future Product Roadmap</h1>
+      <h2 class="slide-subtitle">Transforming institutional access control with intelligent edge technology</h2>
+
+      <div class="grid-2">
+        <div class="card" style="border-left: 4px solid var(--accent-cyan);">
+          <div class="card-title">Project Summary &amp; Value Proposition</div>
+          <ul class="card-list">
+            <li>Bridges the critical gap between inexpensive IoT microcontrollers and military-grade two-factor authentication.</li>
+            <li>Permanently eradicates RFID cloning attacks using dynamic cryptographic OTP verification.</li>
+            <li>Gives security teams centralized visibility with live audit logging, visitor approvals, and remote gate control.</li>
+            <li>Delivers a resilient, fail-secure, production-ready system with 100% test coverage.</li>
+          </ul>
+        </div>
+
+        <div class="card" style="border-left: 4px solid var(--accent-purple);">
+          <div class="card-title">Future Roadmap &amp; Next Horizons</div>
+          <ul class="card-list">
+            <li><strong>📷 ESP32-CAM Facial Recognition:</strong> 3-factor authentication (Badge + Face + OTP).</li>
+            <li><strong>📱 NFC / BLE Mobile Wallet:</strong> Unlock doors using Apple Wallet or Google Wallet NFC passes.</li>
+            <li><strong>🏢 LDAP / Active Directory Sync:</strong> Enterprise badge synchronization for thousands of employees.</li>
+            <li><strong>🤖 AI Anomaly Detection:</strong> Machine learning models flagging suspicious off-hours access patterns.</li>
+            <li><strong>🔋 Low-Power Solar Edge:</strong> Ultra-low power deep sleep for remote gates and turnstiles.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <footer>
+    <div class="keyboard-hint">
+      Tip: Navigate with <kbd>←</kbd> and <kbd>→</kbd> arrow keys or <kbd>Space</kbd>
+    </div>
+    <div class="nav-group">
+      <button class="btn" id="prevBtn" onclick="prevSlide()">◀ Previous</button>
+      <button class="btn btn-solid" id="nextBtn" onclick="nextSlide()">Next ▶</button>
+    </div>
+  </footer>
+
+  <script>
+    const slides = document.querySelectorAll('.slide');
+    const counter = document.getElementById('counter');
+    const progressBar = document.getElementById('progressBar');
+    const prevBtn = document.getElementById('prevBtn');
+    const nextBtn = document.getElementById('nextBtn');
+    let currentIndex = 0;
+
+    function updateSlide(index) {
+      if (index < 0) index = 0;
+      if (index >= slides.length) index = slides.length - 1;
+      currentIndex = index;
+
+      slides.forEach((s, i) => {
+        s.classList.toggle('active', i === currentIndex);
+      });
+
+      counter.textContent = `SLIDE ${currentIndex + 1} / ${slides.length}`;
+      const pct = ((currentIndex + 1) / slides.length) * 100;
+      progressBar.style.width = `${pct}%`;
+
+      prevBtn.disabled = currentIndex === 0;
+      nextBtn.textContent = currentIndex === slides.length - 1 ? 'Finish 🏁' : 'Next ▶';
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function nextSlide() {
+      if (currentIndex < slides.length - 1) {
+        updateSlide(currentIndex + 1);
+      }
+    }
+
+    function prevSlide() {
+      if (currentIndex > 0) {
+        updateSlide(currentIndex - 1);
+      }
+    }
+
+    function toggleFullScreen() {
+      if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen().catch(() => {});
+      } else {
+        if (document.exitFullscreen) {
+          document.exitFullscreen();
+        }
+      }
+    }
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown') {
+        e.preventDefault();
+        nextSlide();
+      } else if (e.key === 'ArrowLeft' || e.key === 'PageUp') {
+        e.preventDefault();
+        prevSlide();
+      } else if (e.key === 'f' || e.key === 'F') {
+        toggleFullScreen();
+      }
+    });
+
+    updateSlide(0);
+  </script>
+</body>
+</html>
