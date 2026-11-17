@@ -24,6 +24,11 @@ function showToast(message, type = 'info', duration = 4000) {
     <div style="flex:1;">${message}</div>
   `;
 
+  // Limit maximum visible toasts to 3 to prevent spamming the screen
+  while (container.children.length >= 3) {
+    container.removeChild(container.firstChild);
+  }
+
   container.appendChild(toast);
 
   setTimeout(() => {

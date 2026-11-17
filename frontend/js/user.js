@@ -86,6 +86,9 @@ async function loadDynamicCardholders() {
 // 2. REAL-TIME HARDWARE SCAN LISTENER (DETECTS PHYSICAL ESP32 CARD TAPS)
 // =========================================================================
 
+let lastProcessedScanUid = null;
+let lastProcessedScanTime = 0;
+
 function startHardwareScanPolling() {
   hardwarePollTimer = setInterval(async () => {
     // Only poll when not currently inside an active OTP verification session or unlock cycle
@@ -96,8 +99,19 @@ function startHardwareScanPolling() {
       const data = await res.json();
 
       if (res.ok && data.hasScan && data.scan && data.scan.uid) {
-        showToast(`📡 Physical Card Tap detected from ESP32: ${data.scan.displayUid}!`, 'info');
-        scanCard(data.scan.displayUid);
+        const uid = data.scan.displayUid || data.scan.uid;
+        const now = Date.now();
+
+        // Prevent spam: Ignore same card repeat within 6 seconds
+        if (uid === lastProcessedScanUid && (now - lastProcessedScanTime) < 6000) {
+          return;
+        }
+
+        lastProcessedScanUid = uid;
+        lastProcessedScanTime = now;
+
+        showToast(`📡 Physical Card Tap detected from ESP32: ${uid}!`, 'info');
+        scanCard(uid);
       }
     } catch (err) { }
   }, 2000);
@@ -441,6 +455,13 @@ async function scanCard(uid) {
       bannerDesc.textContent = data.error || 'RFID card not authorized in database or suspended.';
 
       showToast(data.error || 'Access Denied: Unregistered card', 'error');
+
+      // Auto-dismiss access denial banner after 4 seconds to keep the terminal screen clean
+      setTimeout(() => {
+        if (!currentSessionId && !isUnlocking) {
+          banner.style.display = 'none';
+        }
+      }, 4000);
     }
   } catch (err) {
     showToast(`Network error: ${err.message}`, 'error');

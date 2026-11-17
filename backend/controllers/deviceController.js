@@ -416,7 +416,11 @@ const getLastScan = async (req, res) => {
     }
 
     if (req.query.consume === 'true') {
-      await Device.updateOne({ deviceId }, { $set: { 'lastScannedCard.uid': null } });
+      const update = {};
+      update['lastScannedCard.uid'] = null;
+      update['lastScannedCard.displayUid'] = null;
+      update['lastScannedCard.scannedAt'] = null;
+      await Device.updateOne({ deviceId }, update);
     }
 
     return res.status(200).json({
