@@ -29,22 +29,6 @@ const verifyRfid = async (req, res) => {
     const cleanUid = normalizeRfidUid(uid);
     const displayUid = formatRfidDisplay(cleanUid);
 
-    // Update Device last scanned card (for Admin Auto-Fill)
-    await Device.findOneAndUpdate(
-      { deviceId },
-      {
-        $set: {
-          'lastScannedCard.uid': cleanUid,
-          'lastScannedCard.displayUid': displayUid,
-          'lastScannedCard.scannedAt': new Date(),
-          'lastScannedCard.source': 'terminal',
-          'lastScannedCard.adminConsumedAt': null,
-          'lastScannedCard.userConsumedAt': null
-        }
-      },
-      { upsert: true }
-    );
-
     const user = await User.findOne({ rfidUid: cleanUid });
 
     if (!user) {

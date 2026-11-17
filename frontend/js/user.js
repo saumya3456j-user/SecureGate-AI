@@ -125,18 +125,39 @@ let serialPort = null;
 let serialReader = null;
 let isReadingSerial = false;
 
-// Universal RFID UID extractor (matches delimited e.g. "82 0D EE 5C" or continuous "820DEE5C" from any sketch log)
+// Robust RFID UID extractor — requires valid RFID line formatting or clean 4/7 byte hex, filtering noise and Bluetooth packets
+function isGarbageUid(uid) {
+  if (!uid) return true;
+  const clean = uid.replace(/[^0-9A-Fa-f]/g, '').toUpperCase();
+  if (/^0+$/.test(clean) || /^F+$/.test(clean)) return true;
+  if (/^(00|FF){3,}$/i.test(clean)) return true;
+  // Common bootloader memory words and Bluetooth frames to reject
+  if (clean === '40080400' || clean === '40078000' || clean === '3FFF0030' || clean === '400805DC' || clean === '00001101') return true;
+  return false;
+}
+
 function extractCardUid(text) {
   if (!text) return null;
-  // 1. Delimited 4 to 7 byte hex (spaces, colons, or dashes)
-  const delimited = text.match(/\b([0-9A-Fa-f]{2}(?:[\s:-][0-9A-Fa-f]{2}){3,6})\b/);
-  if (delimited) return delimited[1].replace(/[:-]/g, ' ').toUpperCase().trim();
 
-  // 2. Continuous 8 to 14 hex chars without spaces
-  const continuous = text.match(/\b([0-9A-Fa-f]{8}|[0-9A-Fa-f]{14})\b/);
-  if (continuous) {
-    return continuous[1].match(/.{2}/g).join(' ').toUpperCase();
+  // Filter out ESP32 bootloader, memory dump, or connection status lines
+  if (/load:|entry|configsip|clk_drv|rst:0x|Connecting|Backend|WiFi|SoftAP|HTTP/i.test(text)) {
+    return null;
   }
+
+  // 1. Explicit formatted UID output from ESP32 sketch (e.g. "Formatted UID: 82 0D EE 5C")
+  const markerMatch = text.match(/(?:UID|Card|Formatted UID)\s*[:=]\s*([0-9A-Fa-f]{2}(?:[\s:-][0-9A-Fa-f]{2}){3,6})/i);
+  if (markerMatch) {
+    const candidate = markerMatch[1].replace(/[:-]/g, ' ').toUpperCase().trim();
+    if (!isGarbageUid(candidate)) return candidate;
+  }
+
+  // 2. Strict 4-byte or 7-byte hex with spaces (e.g. "82 0D EE 5C" or "04 A2 3B 4C 5D 6E 7F")
+  const delimited = text.match(/\b([0-9A-Fa-f]{2}(?:[\s][0-9A-Fa-f]{2}){3,6})\b/);
+  if (delimited) {
+    const candidate = delimited[1].toUpperCase().trim();
+    if (!isGarbageUid(candidate)) return candidate;
+  }
+
   return null;
 }
 
@@ -151,7 +172,6 @@ async function connectEsp32UsbSerial() {
   const statusText = document.getElementById('terminal-scan-status-text');
 
   try {
-    // Gracefully clean up any previous reader session
     if (serialReader) {
       try { await serialReader.cancel(); } catch (e) {}
       serialReader = null;
@@ -162,10 +182,24 @@ async function connectEsp32UsbSerial() {
     }
     isReadingSerial = false;
 
-    showToast('Select "Silicon Labs CP210x" or your ESP32 COM port...', 'info', 4000);
+    // Filter ONLY for genuine USB UART bridge chips (CP210x, CH340, FTDI, Espressif)
+    // This hides all standard Bluetooth serial ports and internal noise
+    const filters = [
+      { usbVendorId: 0x10C4 }, // Silicon Labs CP210x (ESP32)
+      { usbVendorId: 0x1A86 }, // WCH CH340 / CH9102 (ESP32)
+      { usbVendorId: 0x0403 }, // FTDI
+      { usbVendorId: 0x303A }  // Espressif native USB
+    ];
 
-    // Prompt user to select ESP32 COM port
-    serialPort = await navigator.serial.requestPort();
+    try {
+      serialPort = await navigator.serial.requestPort({ filters });
+    } catch (e) {
+      // If user cancelled, don't show error
+      if (e.name === 'NotFoundError') return;
+      // Fallback without filters if custom USB bridge is used
+      serialPort = await navigator.serial.requestPort();
+    }
+
     await serialPort.open({ baudRate: 115200 });
 
     if (usbBtn) {
@@ -177,9 +211,16 @@ async function connectEsp32UsbSerial() {
       statusText.innerHTML = '🟢 <strong>ESP32 USB Connected!</strong> Tap your card on the RC522 reader now.';
     }
 
+    window.isUsbSerialConnected = true;
+    const hwDot = document.getElementById('hw-status-dot');
+    const hwText = document.getElementById('hw-status-text');
+    if (hwDot) hwDot.className = 'status-dot online';
+    if (hwText) hwText.textContent = 'Gate Hardware: Online (USB Serial)';
+
     showToast('🟢 ESP32 connected via USB! Tap your RFID card on the reader.', 'success', 6000);
     readSerialLoop();
   } catch (err) {
+    window.isUsbSerialConnected = false;
     if (err.name !== 'NotFoundError') {
       showToast(`USB Serial: ${err.message}. (Ensure Arduino IDE Serial Monitor is closed)`, 'warn', 7000);
     }
@@ -203,28 +244,17 @@ async function readSerialLoop() {
       if (value) {
         buffer += value;
         const lines = buffer.split('\n');
-        buffer = lines.pop(); // keep last chunk
+        buffer = lines.pop(); // keep last incomplete line
 
         for (const line of lines) {
           const cleanLine = line.replace(/\r/g, '').trim();
-          console.log('[ESP32-USB-LOG]', cleanLine);
+          if (!cleanLine) continue;
 
           const detectedUid = extractCardUid(cleanLine);
           if (detectedUid) {
-            console.log('[RFID-DETECTED-VIA-USB]', detectedUid);
             applyScannedUid(detectedUid);
             buffer = '';
             break;
-          }
-        }
-
-        // Also inspect buffer directly if no newline is received
-        if (buffer.length >= 8) {
-          const directUid = extractCardUid(buffer);
-          if (directUid) {
-            console.log('[RFID-DETECTED-IN-BUFFER]', directUid);
-            applyScannedUid(directUid);
-            buffer = '';
           }
         }
       }
@@ -233,6 +263,16 @@ async function readSerialLoop() {
     console.error('Serial stream closed:', err);
   } finally {
     isReadingSerial = false;
+    window.isUsbSerialConnected = false;
+    const hwDot = document.getElementById('hw-status-dot');
+    const hwText = document.getElementById('hw-status-text');
+    if (hwDot) hwDot.className = 'status-dot offline';
+    if (hwText) hwText.textContent = 'Gate Hardware: Offline (SoftAP / Standby)';
+    const usbBtn = document.getElementById('terminal-usb-rfid-btn');
+    if (usbBtn) {
+      usbBtn.textContent = '🔌 Connect USB Reader';
+      usbBtn.className = 'btn btn-cyan btn-sm';
+    }
   }
 }
 

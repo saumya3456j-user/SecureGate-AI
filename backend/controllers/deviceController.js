@@ -81,7 +81,7 @@ const handleRfidEvent = async (req, res) => {
     const cleanUid = normalizeRfidUid(uid);
     const displayUid = formatRfidDisplay(cleanUid);
 
-    // Record last scanned card for Admin Add User auto-fill
+    // Record last scanned card for Admin Add User auto-fill and update live heartbeat
     await Device.findOneAndUpdate(
       { deviceId },
       {
@@ -91,7 +91,10 @@ const handleRfidEvent = async (req, res) => {
           'lastScannedCard.scannedAt': new Date(),
           'lastScannedCard.source': 'hardware',
           'lastScannedCard.adminConsumedAt': null,
-          'lastScannedCard.userConsumedAt': null
+          'lastScannedCard.userConsumedAt': null,
+          status: 'online',
+          lastHeartbeat: new Date(),
+          ipAddress: req.ip || req.connection?.remoteAddress || '127.0.0.1'
         }
       },
       { upsert: true }
@@ -262,6 +265,20 @@ const handleRfidEvent = async (req, res) => {
 const getPendingCommand = async (req, res) => {
   try {
     const deviceId = req.deviceId || req.query.deviceId || process.env.DEVICE_ID || 'ESP32_SECUREGATE_01';
+
+    // Record live device heartbeat from periodic polling
+    await Device.updateOne(
+      { deviceId },
+      {
+        $set: {
+          status: 'online',
+          lastHeartbeat: new Date(),
+          ipAddress: req.ip || req.connection?.remoteAddress || '127.0.0.1'
+        }
+      },
+      { upsert: true }
+    );
+
     const pending = await getActivePendingCommand(deviceId);
 
     if (!pending) {
@@ -372,7 +389,7 @@ const getDeviceStatus = async (req, res) => {
     }
 
     const now = new Date();
-    const isOnline = device.lastHeartbeat && (now.getTime() - new Date(device.lastHeartbeat).getTime()) < 25000;
+    const isOnline = device.lastHeartbeat && (now.getTime() - new Date(device.lastHeartbeat).getTime()) < 15000;
 
     return res.status(200).json({
       success: true,
@@ -411,7 +428,7 @@ const getLastScan = async (req, res) => {
     }
 
     const { uid, displayUid, scannedAt, source, adminConsumedAt, userConsumedAt } = device.lastScannedCard;
-    const isRecent = scannedAt && (Date.now() - new Date(scannedAt).getTime() < 60000);
+    const isRecent = scannedAt && (Date.now() - new Date(scannedAt).getTime() < 15000);
 
     if (!isRecent) {
       return res.status(200).json({ success: true, hasScan: false, scan: null });

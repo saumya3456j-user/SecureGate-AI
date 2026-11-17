@@ -64,7 +64,10 @@ async function updateTelemetryUI() {
 
   const device = await fetchSystemTelemetry();
   if (hwDot && hwText) {
-    if (device && device.isOnline) {
+    if (window.isUsbSerialConnected) {
+      hwDot.className = 'status-dot online';
+      hwText.textContent = 'Gate Hardware: Online (USB Serial)';
+    } else if (device && device.isOnline) {
       hwDot.className = 'status-dot online';
       hwText.textContent = `Gate Hardware: Online (${device.wifiSsid || 'Station'})`;
     } else {

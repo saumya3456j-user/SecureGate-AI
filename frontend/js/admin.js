@@ -1024,15 +1024,34 @@ let adminSerialPort = null;
 let adminSerialReader = null;
 let isAdminReadingSerial = false;
 
+function isGarbageUid(uid) {
+  if (!uid) return true;
+  const clean = uid.replace(/[^0-9A-Fa-f]/g, '').toUpperCase();
+  if (/^0+$/.test(clean) || /^F+$/.test(clean)) return true;
+  if (/^(00|FF){3,}$/i.test(clean)) return true;
+  if (clean === '40080400' || clean === '40078000' || clean === '3FFF0030' || clean === '400805DC' || clean === '00001101') return true;
+  return false;
+}
+
 function extractCardUid(text) {
   if (!text) return null;
-  const delimited = text.match(/\b([0-9A-Fa-f]{2}(?:[\s:-][0-9A-Fa-f]{2}){3,6})\b/);
-  if (delimited) return delimited[1].replace(/[:-]/g, ' ').toUpperCase().trim();
 
-  const continuous = text.match(/\b([0-9A-Fa-f]{8}|[0-9A-Fa-f]{14})\b/);
-  if (continuous) {
-    return continuous[1].match(/.{2}/g).join(' ').toUpperCase();
+  if (/load:|entry|configsip|clk_drv|rst:0x|Connecting|Backend|WiFi|SoftAP|HTTP/i.test(text)) {
+    return null;
   }
+
+  const markerMatch = text.match(/(?:UID|Card|Formatted UID)\s*[:=]\s*([0-9A-Fa-f]{2}(?:[\s:-][0-9A-Fa-f]{2}){3,6})/i);
+  if (markerMatch) {
+    const candidate = markerMatch[1].replace(/[:-]/g, ' ').toUpperCase().trim();
+    if (!isGarbageUid(candidate)) return candidate;
+  }
+
+  const delimited = text.match(/\b([0-9A-Fa-f]{2}(?:[\s][0-9A-Fa-f]{2}){3,6})\b/);
+  if (delimited) {
+    const candidate = delimited[1].toUpperCase().trim();
+    if (!isGarbageUid(candidate)) return candidate;
+  }
+
   return null;
 }
 
@@ -1053,8 +1072,21 @@ async function connectEsp32UsbSerialForInput(targetInputId) {
     }
     isAdminReadingSerial = false;
 
-    showToast('Select "Silicon Labs CP210x" in the browser dialog...', 'info', 4000);
-    adminSerialPort = await navigator.serial.requestPort();
+    // Filter ONLY for genuine USB UART bridge chips (CP210x, CH340, FTDI, Espressif)
+    const filters = [
+      { usbVendorId: 0x10C4 }, // Silicon Labs CP210x (ESP32)
+      { usbVendorId: 0x1A86 }, // WCH CH340 / CH9102 (ESP32)
+      { usbVendorId: 0x0403 }, // FTDI
+      { usbVendorId: 0x303A }  // Espressif native USB
+    ];
+
+    try {
+      adminSerialPort = await navigator.serial.requestPort({ filters });
+    } catch (e) {
+      if (e.name === 'NotFoundError') return;
+      adminSerialPort = await navigator.serial.requestPort();
+    }
+
     await adminSerialPort.open({ baudRate: 115200 });
     showToast('🟢 USB Reader Connected! Tap card on RC522 to auto-fill UID.', 'success', 6000);
     readAdminSerialLoop(targetInputId);
@@ -1082,12 +1114,13 @@ async function readAdminSerialLoop(targetInputId) {
       if (value) {
         buffer += value;
         const lines = buffer.split('\n');
-        buffer = lines.pop();
+        buffer = lines.pop(); // keep last incomplete chunk
 
         for (const line of lines) {
           const cleanLine = line.replace(/\r/g, '').trim();
-          const detectedUid = extractCardUid(cleanLine);
+          if (!cleanLine) continue;
 
+          const detectedUid = extractCardUid(cleanLine);
           if (detectedUid) {
             const input = document.getElementById(targetInputId);
             if (input) {
@@ -1099,19 +1132,6 @@ async function readAdminSerialLoop(targetInputId) {
             showToast(`Card UID Scanned via USB: ${detectedUid}!`, 'success');
             buffer = '';
             break;
-          }
-        }
-
-        if (buffer.length >= 8) {
-          const directUid = extractCardUid(buffer);
-          if (directUid) {
-            const input = document.getElementById(targetInputId);
-            if (input) {
-              input.value = directUid;
-              input.style.borderColor = 'var(--accent-cyan)';
-            }
-            showToast(`Card UID Scanned via USB: ${directUid}!`, 'success');
-            buffer = '';
           }
         }
       }
