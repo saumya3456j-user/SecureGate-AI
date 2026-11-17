@@ -142,8 +142,10 @@ app.use((err, req, res, next) => {
 
 // Start Server after connecting to MongoDB
 const startServer = async () => {
-  await connectDB();
-  await seedInitialData();
+  const db = await connectDB();
+  if (db) {
+    await seedInitialData();
+  }
 
   app.listen(PORT, '0.0.0.0', () => {
     console.log('\n======================================================');
