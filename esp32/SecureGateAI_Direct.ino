@@ -42,8 +42,9 @@ const char* AP_SSID       = "SecureGate-AP";
 const char* AP_PASSWORD   = "securegate123";
 
 // 2. SecureGate AI Backend Server URL (Laptop IP on personal network)
-const char* BACKEND_SERVER = "http://10.58.165.201:5000";
+const char* BACKEND_SERVER = "http://10.109.175.60:5000";
 const char* DEVICE_ID      = "ESP32_SECUREGATE_01";
+const char* DEVICE_API_KEY = "SG-DEV-KEY-98472910-ESP32-AUTH-TOKEN";
 
 // 3. Hardware Pins
 #define RFID_SS    5
@@ -234,6 +235,7 @@ void sendRfidScanToBackend(String displayUid) {
 
   http.addHeader("Content-Type", "application/json");
   http.addHeader("X-Device-Id", DEVICE_ID);
+  http.addHeader("X-Device-Key", DEVICE_API_KEY);
   http.setTimeout(3500);
 
   String payload = "{\"uid\":\"" + displayUid + "\",\"deviceId\":\"" + String(DEVICE_ID) + "\"}";
@@ -281,6 +283,8 @@ void checkPendingUnlockCommand() {
     http.begin(url);
   }
 
+  http.addHeader("X-Device-Id", DEVICE_ID);
+  http.addHeader("X-Device-Key", DEVICE_API_KEY);
   http.setTimeout(2500);
   int httpCode = http.GET();
 
