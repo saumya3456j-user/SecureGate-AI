@@ -36,6 +36,8 @@ const char* WIFI_SSID     = "soumya";
 const char* WIFI_PASSWORD = "123456789";
 const char* WIFI_SSID_2   = "OnePlus 10R 5G";
 const char* WIFI_PASS_2   = "123456789";
+const char* WIFI_SSID_3   = "Saumya";
+const char* WIFI_PASS_3   = "123456789";
 
 // Fallback Access Point if Wi-Fi cannot be reached
 const char* AP_SSID       = "SecureGate-AP";
@@ -346,19 +348,32 @@ void connectWiFi() {
 
   WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
   unsigned long start = millis();
-  while (WiFi.status() != WL_CONNECTED && millis() - start < 6000) {
+  while (WiFi.status() != WL_CONNECTED && millis() - start < 15000) {
     Serial.print(".");
     delay(500);
   }
 
-  // Fallback to secondary SSID (e.g. OnePlus 10R 5G hotspot) if first attempt hasn't connected
+  // Fallback to secondary SSID (e.g. OnePlus 10R 5G hotspot)
   if (WiFi.status() != WL_CONNECTED && String(WIFI_SSID_2).length() > 0) {
     Serial.print("\nTrying secondary network '");
     Serial.print(WIFI_SSID_2);
     Serial.print("'");
     WiFi.begin(WIFI_SSID_2, WIFI_PASS_2);
     start = millis();
-    while (WiFi.status() != WL_CONNECTED && millis() - start < 6000) {
+    while (WiFi.status() != WL_CONNECTED && millis() - start < 12000) {
+      Serial.print(".");
+      delay(500);
+    }
+  }
+
+  // Fallback to third SSID (e.g. capitalized Saumya)
+  if (WiFi.status() != WL_CONNECTED && String(WIFI_SSID_3).length() > 0) {
+    Serial.print("\nTrying tertiary network '");
+    Serial.print(WIFI_SSID_3);
+    Serial.print("'");
+    WiFi.begin(WIFI_SSID_3, WIFI_PASS_3);
+    start = millis();
+    while (WiFi.status() != WL_CONNECTED && millis() - start < 12000) {
       Serial.print(".");
       delay(500);
     }
