@@ -110,6 +110,15 @@ function startHardwareScanPolling() {
         lastProcessedScanUid = uid;
         lastProcessedScanTime = now;
 
+        // Auto-fill into manual-uid-input with cyan highlight glow
+        const input = document.getElementById('manual-uid-input');
+        if (input) {
+          input.value = uid;
+          input.style.borderColor = 'var(--accent-cyan)';
+          input.style.boxShadow = '0 0 20px rgba(0, 240, 255, 0.5)';
+          setTimeout(() => { if (input) input.style.boxShadow = ''; }, 2500);
+        }
+
         showToast(`📡 Physical Card Tap detected from ESP32: ${uid}!`, 'info');
         scanCard(uid);
       }
@@ -394,6 +403,11 @@ async function scanCard(uid) {
   if (!targetUid) {
     showToast('Please enter or select an RFID Card UID', 'warn');
     return;
+  }
+
+  const inputEl = document.getElementById('manual-uid-input');
+  if (inputEl && inputEl.value !== targetUid) {
+    inputEl.value = targetUid;
   }
 
   const scanBtn = document.getElementById('scan-uid-btn');

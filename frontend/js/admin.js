@@ -308,7 +308,7 @@ function openAddUserModal() {
     modal.classList.add('active');
     document.getElementById('add-user-form').reset();
     document.getElementById('new-user-active').checked = true;
-    stopRfidScanListener();
+    startRfidScanListener('new-user-rfid', 'scan-rfid-btn');
   }
 }
 
@@ -404,6 +404,7 @@ async function openEditUserModal(userId) {
       document.getElementById('edit-user-active').checked = Boolean(u.active);
 
       modal.classList.add('active');
+      startRfidScanListener('edit-user-rfid', 'edit-scan-rfid-btn');
     } else {
       showToast(data.error || 'Failed to fetch user', 'error');
     }

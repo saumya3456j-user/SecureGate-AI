@@ -428,7 +428,7 @@ const getLastScan = async (req, res) => {
     }
 
     const { uid, displayUid, scannedAt, source, adminConsumedAt, userConsumedAt } = device.lastScannedCard;
-    const isRecent = scannedAt && (Date.now() - new Date(scannedAt).getTime() < 15000);
+    const isRecent = scannedAt && (Date.now() - new Date(scannedAt).getTime() < 35000);
 
     if (!isRecent) {
       return res.status(200).json({ success: true, hasScan: false, scan: null });
