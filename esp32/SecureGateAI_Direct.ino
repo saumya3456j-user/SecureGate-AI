@@ -58,21 +58,6 @@ const char* DEVICE_API_KEY = "SG-DEV-KEY-98472910-ESP32-AUTH-TOKEN";
 #define GREEN_LED  2
 #define RED_LED    4
 #define BUZZER     15
-#define SERVO_PIN  13
-
-// Set to 1 if you have a Servo Motor connected on GPIO 13, 0 for LED/Buzzer only
-#define ENABLE_SERVO 1
-
-// ========== SERVO SUPPORT ==========
-#if ENABLE_SERVO
-  #if __has_include(<ESP32Servo.h>)
-    #include <ESP32Servo.h>
-    Servo gateServo;
-    bool useEsp32ServoLib = true;
-  #else
-    bool useEsp32ServoLib = false;
-  #endif
-#endif
 
 // ========== OBJECTS ==========
 MFRC522 rfid(RFID_SS, RFID_RST);
@@ -96,35 +81,6 @@ void beep(int frequency, int duration) {
   tone(BUZZER, frequency);
   delay(duration);
   noTone(BUZZER);
-}
-
-// ========== SERVO HELPER ==========
-void initServo() {
-#if ENABLE_SERVO
-  #if __has_include(<ESP32Servo.h>)
-    gateServo.attach(SERVO_PIN);
-    gateServo.write(0); // Locked position
-  #else
-    // Fallback standard PWM setup
-    ledcSetup(0, 50, 16);
-    ledcAttachPin(SERVO_PIN, 0);
-    ledcWrite(0, 1638); // ~0.5ms = 0 degrees (Locked)
-  #endif
-#endif
-}
-
-void moveServo(int angle) {
-#if ENABLE_SERVO
-  #if __has_include(<ESP32Servo.h>)
-    if (useEsp32ServoLib) {
-      gateServo.write(angle);
-      return;
-    }
-  #endif
-  // Direct PWM mapping: 0 deg ~ 1638, 90 deg ~ 4915 (16-bit at 50Hz)
-  int duty = map(angle, 0, 180, 1638, 8192);
-  ledcWrite(0, duty);
-#endif
 }
 
 // ========== LOG SYSTEM ==========
@@ -179,14 +135,8 @@ void grantAccess() {
 
   addLog("ACCESS GRANTED: " + lastUID);
 
-  // Rotate Servo to 90 degrees (Unlocked)
-  moveServo(90);
-
-  // Hold gate unlocked for 3 seconds
+  // Keep Green LED illuminated for 3 seconds
   delay(3000);
-
-  // Return Servo to 0 degrees (Locked)
-  moveServo(0);
   digitalWrite(GREEN_LED, LOW);
 
   lastStatus = "Gate Secured (Locked)";
@@ -500,8 +450,6 @@ void setup() {
 
   digitalWrite(GREEN_LED, LOW);
   digitalWrite(RED_LED, LOW);
-
-  initServo();
 
   preferences.begin("securegate", false);
   logs = preferences.getString("logs", "");
