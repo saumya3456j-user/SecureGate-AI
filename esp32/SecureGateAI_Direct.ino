@@ -34,7 +34,7 @@
 // 1. Wi-Fi Configuration
 const char* WIFI_SSID     = "soumya";
 const char* WIFI_PASSWORD = "123456789";
-const char* WIFI_SSID_2   = "OnePlus 10R 5G";
+const char* WIFI_SSID_2   = "Redmi 12 5G";
 const char* WIFI_PASS_2   = "123456789";
 const char* WIFI_SSID_3   = "Saumya";
 const char* WIFI_PASS_3   = "123456789";
